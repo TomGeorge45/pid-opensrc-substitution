@@ -14,7 +14,7 @@
 
 | Item | Status | What exists / what's left |
 |---|---|---|
-| 0.1 Provision Colab Pro+ GPU | 🟡 PARTIAL | Colab Pro+ available and used, but Step 1 ran on **CPU**. Need a GPU runtime + record `nvidia-smi` (model + VRAM) from Phase 4 onward. |
+| 0.1 Provision Colab Pro+ GPU | ✅ DONE | GPU runtime confirmed: **NVIDIA A100-SXM4-80GB**, 85.1 GB VRAM (`torch.cuda` sees it). Exceeds the ideal 40GB bar — no QLoRA/offload needed for 8B fine-tuning. |
 | 0.2 Mount Drive for persistence | ✅ DONE | Drive mounts; `MyDrive/pid_project/data/` exists and persists. (Checklist names it `pid_stage4/` — cosmetic difference, reuse `pid_project`.) |
 | 0.3 Install dependencies | ✅ DONE | torch, transformers, accelerate, vllm, pycocotools, supervision, kagglehub, kaggle, qwen_vl_utils, einops, timm all import cleanly on the GPU runtime. `requirements.txt` pinned to Drive (`pid_project/data/requirements.txt`). vllm needed a CUDA 13 runtime fix (torch is cu128; preloaded `libcudart.so.13` via `ctypes` since `LD_LIBRARY_PATH` set at runtime didn't reach vllm's `dlopen`). |
 | 0.4 Set up MLflow tracking | ⛔ N/A | Superseded — tracking via `results.csv` + `experiments/stage4/v*.md` per CLAUDE.md rule #8. |
