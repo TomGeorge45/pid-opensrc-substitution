@@ -27,10 +27,10 @@
 |---|---|---|
 | 1.1 Download Gupta | ✅ DONE | Downloaded to Drive via Colab wget (direct from Zenodo). |
 | 1.2 Extract Gupta | ✅ DONE | Sheet-level count confirmed at `PID_Dataset/0__raw_data/sheets/{train,test}`: 72 train + 20 test = 92, `assert`ed directly. (Tile-level 642/215 split from Step 1 is separate/downstream — sheets are the ground truth for this check.) |
-| 1.3 Download Kaggle | ✅ DONE | Downloaded, extracted locally, zipped, uploaded to Drive. |
-| 1.4 Extract Kaggle | ✅ DONE | Confirmed 32 classes, ~30k images, 43,055 instances parsed, all 32 classes present, balanced (rarest 1,120). Folder de-duplicated (stray `archive/` removed), train.txt + val.txt in place. |
-| 1.5 Verify annotation integrity | 🔴 TODO | Not done. Need: zero orphan annotations, zero unannotated images in labeled splits. `assert orphans == 0 and unannotated == 0`. (Note: earlier saw 6,591 labels vs 30k images on Kaggle — must confirm whether unlabeled = intentional negatives or a mismatch.) |
-| 1.6 Visual spot-check | 🔴 TODO | Not done. Render 5 Gupta + 5 Kaggle with boxes overlaid; confirm boxes land on symbols (catches xywh/xyxy + normalized/absolute bugs). Save 10 overlays to Drive. |
+| 1.3 Download Kaggle | 🟡 PARTIAL | Downloaded/extracted/uploaded, but 1.5's findings (below) show this download is missing most of its labels — **not confirmed against the dataset card's ~195k instance count** as 1.3's own checklist bar requires. Revisit once re-download/investigation resolves 1.5. |
+| 1.4 Extract Kaggle | 🟡 PARTIAL | 32 classes present and balanced among the labels that *do* exist (rarest 1,120) — but see 1.5: only ~22% of images actually have a label file, so "43,055 instances parsed" is a severe undercount of the true dataset, not a complete picture. |
+| 1.5 Verify annotation integrity | 🔴 **BLOCKING FAILURE** | Gupta: clean — 0 orphans, 0 unannotated across train (72) + test (20). **Kaggle: fails hard.** 21,324 of 30,000 images (71%) are listed in `train.txt`/`val.txt` but have **no label file**, despite visually containing real symbols (confirmed by opening `470_3200_640.jpg` — clearly shows valve symbols + pipe tags, e.g. `8"-IC-3076`, with zero annotation). This is not intentional-negative tiling — it's missing label data. Matches the 43,055-vs-~195k instance gap (43,055/195,000 ≈ 22% ≈ 6,591/30,000 labeled fraction). **Root cause not yet known** — candidates: incomplete upload/zip, partial extraction, or the Kaggle source itself only ships labels for a subset. Needs investigation before Kaggle can be trusted as a pretrain source. |
+| 1.6 Visual spot-check | 🔴 TODO | Not done as a formal deliverable (5+5 overlays saved to Drive), though the 1.5 investigation informally spot-checked one Kaggle image already. |
 
 **Bonus already done (not in checklist but valuable):** image-health check — 0 unreadable, Kaggle uniform 1280×1280, Gupta 224–1000 range. Feeds tiling/resize decisions.
 
