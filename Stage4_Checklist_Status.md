@@ -26,7 +26,7 @@
 | Item | Status | What exists / what's left |
 |---|---|---|
 | 1.1 Download Gupta | ✅ DONE | Downloaded to Drive via Colab wget (direct from Zenodo). |
-| 1.2 Extract Gupta | 🟡 PARTIAL | Extracted; counted 4,590 images and 642/215 **tiles**. **NOT confirmed to checklist bar:** need `assert n_annotated_sheets == 92` (72 train + 20 test at the **sheet** level). Tile counts ≠ sheet counts — the 92-sheet verification is still open. |
+| 1.2 Extract Gupta | ✅ DONE | Sheet-level count confirmed at `PID_Dataset/0__raw_data/sheets/{train,test}`: 72 train + 20 test = 92, `assert`ed directly. (Tile-level 642/215 split from Step 1 is separate/downstream — sheets are the ground truth for this check.) |
 | 1.3 Download Kaggle | ✅ DONE | Downloaded, extracted locally, zipped, uploaded to Drive. |
 | 1.4 Extract Kaggle | ✅ DONE | Confirmed 32 classes, ~30k images, 43,055 instances parsed, all 32 classes present, balanced (rarest 1,120). Folder de-duplicated (stray `archive/` removed), train.txt + val.txt in place. |
 | 1.5 Verify annotation integrity | 🔴 TODO | Not done. Need: zero orphan annotations, zero unannotated images in labeled splits. `assert orphans == 0 and unannotated == 0`. (Note: earlier saw 6,591 labels vs 30k images on Kaggle — must confirm whether unlabeled = intentional negatives or a mismatch.) |
