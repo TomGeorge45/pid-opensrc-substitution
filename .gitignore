@@ -1,0 +1,14 @@
+data/
+*.pdf
+*.png
+*.jpg
+datasets/
+*.safetensors
+*.bin
+*.pt
+*.gguf
+adapters/
+checkpoints/
+runs/
+.env
+_token
