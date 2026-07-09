@@ -30,7 +30,10 @@ other stage reuses. Nothing else is in scope here until Stage 4 is locked.
 5. **Gupta is class-agnostic.** Every box is labeled "Symbol" — no type. This is why Stage 4
    uses a TWO-PART metric: detection scored on Gupta (real), typing scored on Kaggle (synthetic).
    Never average these into one number. Always report both, with Kaggle's ontology-coverage %
-   next to the typing score.
+   next to the typing score. **⚠️ Open question (see `Agent_Pipeline_Facts.md` §3, flag 3):**
+   the agent's ontology is runtime/per-tenant, not fixed — "coverage %" needs a defined
+   reference ontology (e.g. an illustrative/representative set) before this can be computed
+   honestly. Not yet resolved.
 6. **Detection pass bar is mAP@0.5 or F1 — never recall alone.** A model that emits thousands
    of boxes scores near-perfect recall with garbage precision. Precision must be part of the bar.
 7. **Test-set discipline.** The 20 Gupta test sheets are frozen in `test_ids.json` the moment
@@ -46,8 +49,13 @@ other stage reuses. Nothing else is in scope here until Stage 4 is locked.
    confirmation for every task. This is the authoritative to-do list.
 3. `Stage4_Checklist_Status.md` — what's already done and reusable from prior work, vs. what's
    still open. Check this before starting any phase so you don't redo finished work.
-4. `base.md` — headline scores once runs exist.
-5. `results.csv` — every run logged, one row each.
+4. `Agent_Pipeline_Facts.md` — **code-verified** facts about the real agent's Stage 3 tiling
+   scheme, Stage 4 output schema, and entity ontology, pulled directly from
+   `pnid-intelligence-agent` source. Three flags in here matter a lot: confidence and bbox are
+   nested under `provenance.*` (not top-level), and the entity ontology is runtime/per-tenant,
+   not a fixed enum — don't assume a flat/simple schema without checking this file first.
+5. `base.md` — headline scores once runs exist.
+6. `results.csv` — every run logged, one row each.
 
 ## Where we are right now
 
@@ -64,14 +72,23 @@ Phase 0/1 boundary. Roughly:
 
 **Full detail in `Stage4_Checklist_Status.md` — check it before claiming any item is "TODO."**
 
-## Immediate next 3 actions
+## Immediate next actions
 
-1. Install full dependency stack (torch, transformers, vllm/lmdeploy, pycocotools, supervision,
-   kagglehub) — no MLflow, we track via results.csv instead.
-2. Close the three open Phase 1 confirmations: 92-annotated-sheet assert, annotation integrity
-   (zero orphans/unannotated), visual box-overlay spot-check (5 Gupta + 5 Kaggle).
-3. Pull the real agent's Stage 3 tiling scheme and Stage 4 output schema (from the actual agent
-   codebase, not assumed) — this unblocks Phase 2.3 and 2.5.
+Phases 0 and 1 are fully complete (dependencies installed, all Phase 1 confirmations closed,
+Kaggle's broken label upload found and fixed, GPU confirmed). Phase 2.1 (frozen `test_ids.json`)
+is done. Agent facts pulled — see `Agent_Pipeline_Facts.md`. Next:
+
+1. **Decide how to handle the ontology-coverage metric (2.2).** The agent's entity ontology is
+   NOT fixed — it's fetched per-tenant at runtime (`Agent_Pipeline_Facts.md` §3, flag 3). There
+   is no single canonical list to measure Kaggle's 32 classes' "coverage %" against, as rule 5
+   and the two-part-metric section below currently assume. Needs a decision before the typing
+   harness is built.
+2. **Build Stage 2.3 tiling** using the now-known exact params: 1024×1024 tiles, 205px overlap,
+   819px stride, title-block carve with 20px margin (reject if >30% of page), coords in
+   original page-raster `[x0,y0,x1,y1]`. See `Agent_Pipeline_Facts.md` §1.
+3. **Build the Stage 4 output-format harness (2.4/2.5)** using the real `DetectionRecord` shape
+   — remember confidence and bbox are nested under `provenance.*`, not top-level
+   (`Agent_Pipeline_Facts.md` §2, flags 1-2).
 
 ## Experiment tracking (no MLflow — use this schema)
 
