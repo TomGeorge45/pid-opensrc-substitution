@@ -79,7 +79,13 @@ def parse(text, img_w, img_h):
     for m in _POINTS_RE.finditer(text):
         nums = [float(v) for v in re.split(r'[\t:;, ]+', m.group(1).strip()) if v]
         if len(nums) % 3 != 0:
-            return None, f"coords not a multiple of 3 (frame,x,y): {nums}"
+            # observed glitch: the first point sometimes has a duplicated leading index,
+            # e.g. "1 1 027 016 2 176 158 ..." instead of "1 027 016 2 176 158 ...". If
+            # dropping one duplicate near the start fixes the count, repair rather than fail.
+            if len(nums) >= 2 and nums[0] == nums[1] and (len(nums) - 1) % 3 == 0:
+                nums = nums[1:]
+            else:
+                return None, f"coords not a multiple of 3 (frame,x,y): {nums}"
         for i in range(0, len(nums), 3):
             _frame, x_scaled, y_scaled = nums[i:i + 3]
             x, y = x_scaled / 1000 * img_w, y_scaled / 1000 * img_h
