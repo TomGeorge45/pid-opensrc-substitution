@@ -75,9 +75,17 @@
 
 ## Phase 5 — Fine-Tuning
 
+**⚠️ Decision (2026-07-10): fine-tune all 3 candidates, not just the winner/top 2.** Deviates
+from the checklist's own scoping ("Fine-Tuning (winner, or top 2)") — explicit user decision,
+expense not a constraint. Phase 4 (zero-shot baseline) is still deferred; this decision means
+Phase 4's original *purpose* (narrowing candidates before expensive fine-tuning) no longer
+gates Phase 5 — all three proceed regardless of what a zero-shot bake-off would have shown.
+Phase 4 may still be worth doing later for its own sake (a real zero-shot number is useful
+context even if it's not gating anything), but it's not a blocker for Phase 5 anymore.
+
 | Item | Status | What exists / what's left |
 |---|---|---|
-| 5.1 Build domain-adaptation training set | 🟡 PARTIAL | Datasets ready; the **train-only, zero-test-leak discipline** already understood. Still need the assembled FT set in the winner's format + `intersection(train,test)==empty` assert. |
+| 5.1 Build domain-adaptation training set | 🟡 PARTIAL | Datasets ready; the **train-only, zero-test-leak discipline** already understood. Still need the assembled FT set (model-agnostic manifest, then per-model format conversion x3) + `intersection(train,test)==empty` assert. |
 | 5.2 Task-neutral domain fine-tune | 🔴 TODO | New (QLoRA). The general LoRA/QLoRA-on-Colab plan from earlier docs carries over as method. |
 | 5.3 Stage-4 detection LoRA adapter | 🔴 TODO | New — adapter-on-top-of-base layering. |
 | 5.4 Run fine-tuned on test set | 🔴 TODO | New. |
