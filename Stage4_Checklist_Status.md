@@ -85,7 +85,7 @@ context even if it's not gating anything), but it's not a blocker for Phase 5 an
 
 | Item | Status | What exists / what's left |
 |---|---|---|
-| 5.1 Build domain-adaptation training set | 🟡 PARTIAL | Datasets ready; the **train-only, zero-test-leak discipline** already understood. Still need the assembled FT set (model-agnostic manifest, then per-model format conversion x3) + `intersection(train,test)==empty` assert. |
+| 5.1 Build domain-adaptation training set | ✅ DONE | Implemented in `src/stage4_symbol_detection/finetune_dataset.py`: `assemble_manifest()` collects Gupta's 72 train sheets + all Kaggle pretrain images into a model-agnostic manifest, asserting zero train/test leak against `test_ids.json` before returning anything (not optional — no code path skips it). Tested against a synthetic fake repo with a deliberately planted leak, confirmed `AssertionError` is raised (not silently passed) and names the offending sheet ID. **Still needed:** per-model training-format conversion (x3, since all candidates are being fine-tuned) — this manifest is the shared input, format conversion is candidate-specific follow-up work. |
 | 5.2 Task-neutral domain fine-tune | 🔴 TODO | New (QLoRA). The general LoRA/QLoRA-on-Colab plan from earlier docs carries over as method. |
 | 5.3 Stage-4 detection LoRA adapter | 🔴 TODO | New — adapter-on-top-of-base layering. |
 | 5.4 Run fine-tuned on test set | 🔴 TODO | New. |
