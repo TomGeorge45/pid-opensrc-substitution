@@ -141,7 +141,7 @@ data_version: data-v1
 |---|---|---|
 | Qwen3-VL (7B/8B) | Best general open VLM, strong localization+OCR heritage | — |
 | InternVL3 (8B) | Cleaner MIT license, genuine competitor | — |
-| Molmo (7B) | Native pixel-pointing, strong localization | Unproven on reasoning stages (this repo doesn't touch those, but flag it in the handoff note anyway) |
+| Molmo2-O-7B | Native pixel-pointing, strong localization | Unproven on reasoning stages (this repo doesn't touch those, but flag it in the handoff note anyway). **Switched from the original Molmo-7B-D-0924 on 2026-07-10** — the 2024-era checkpoint's custom `trust_remote_code` class hit 5 escalating incompatibilities with current `transformers` (tied-weights handling, `tie_weights` signature, generation internals). Molmo2 uses the standard `AutoModelForImageTextToText`/`generate()` pattern like the other two candidates. |
 
 Base is selected on Stage 4 ground-truth accuracy alone. All three must go through the SAME
 unified matching metric (point-in-box rule) so Molmo's points aren't scored on an easier metric
