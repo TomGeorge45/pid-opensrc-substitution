@@ -17,15 +17,10 @@ needing per-candidate versions. Worth testing before assuming permanent version 
 
 import re
 import time
+import typing
 
-import torch
-from PIL import Image
-from transformers import (
-    AutoModelForImageTextToText,
-    AutoProcessor,
-    MaxTimeCriteria,
-    StoppingCriteriaList,
-)
+if typing.TYPE_CHECKING:
+    from PIL import Image
 
 MODEL_ID = "allenai/Molmo2-O-7B"
 
@@ -38,7 +33,12 @@ _POINTS_RE = re.compile(r'<(?:points|tracks).*? coords="([0-9\t:;, .]+)"/?>')
 
 
 def load():
-    """Returns (processor, model). Requires transformers==4.57.1 (see module docstring)."""
+    """Returns (processor, model). Requires transformers==4.57.1 (see module docstring).
+    Imports torch/transformers lazily so this module can be imported (and `parse()` tested)
+    on machines without them installed — only load()/run() actually need the GPU stack."""
+    import torch
+    from transformers import AutoModelForImageTextToText, AutoProcessor
+
     t0 = time.time()
     processor = AutoProcessor.from_pretrained(MODEL_ID, trust_remote_code=True, dtype="auto")
     model = AutoModelForImageTextToText.from_pretrained(
@@ -49,7 +49,10 @@ def load():
     return processor, model
 
 
-def run(processor, model, image: Image.Image, prompt: str = PROMPT, max_time_s: float = 60.0):
+def run(processor, model, image: "Image.Image", prompt: str = PROMPT, max_time_s: float = 60.0):
+    import torch
+    from transformers import MaxTimeCriteria, StoppingCriteriaList
+
     messages = [{
         "role": "user",
         "content": [{"type": "text", "text": prompt}, {"type": "image", "image": image}],

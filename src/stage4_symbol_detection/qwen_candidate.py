@@ -10,15 +10,10 @@ for the full incident history.
 import json
 import re
 import time
+import typing
 
-import torch
-from PIL import Image
-from transformers import (
-    AutoModelForImageTextToText,
-    AutoProcessor,
-    MaxTimeCriteria,
-    StoppingCriteriaList,
-)
+if typing.TYPE_CHECKING:
+    from PIL import Image
 
 MODEL_ID = "Qwen/Qwen3-VL-8B-Instruct"
 
@@ -37,7 +32,12 @@ array: []"""
 
 
 def load():
-    """Returns (processor, model). ~17.5GB VRAM on bfloat16."""
+    """Returns (processor, model). ~17.5GB VRAM on bfloat16.
+    Imports torch/transformers lazily so this module can be imported (and `parse()` tested)
+    on machines without them installed — only load()/run() actually need the GPU stack."""
+    import torch
+    from transformers import AutoModelForImageTextToText, AutoProcessor
+
     t0 = time.time()
     processor = AutoProcessor.from_pretrained(MODEL_ID)
     model = AutoModelForImageTextToText.from_pretrained(
@@ -48,10 +48,13 @@ def load():
     return processor, model
 
 
-def run(processor, model, image: Image.Image, prompt: str = SYMBOL_DETECTION_PROMPT, max_time_s: float = 60.0):
+def run(processor, model, image: "Image.Image", prompt: str = SYMBOL_DETECTION_PROMPT, max_time_s: float = 60.0):
     """max_time_s is a hard wall-clock cap — protects against degenerate generation loops that
     would otherwise burn the full max_new_tokens budget (observed: a stuck loop can take 170s+
     on a dense tile). Distinct from max_new_tokens, which only caps token COUNT, not time."""
+    import torch
+    from transformers import MaxTimeCriteria, StoppingCriteriaList
+
     messages = [{
         "role": "user",
         "content": [{"type": "image", "image": image}, {"type": "text", "text": prompt}],
