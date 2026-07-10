@@ -66,13 +66,16 @@ def _build_gupta_tiles(item, candidate):
     return examples
 
 
+KAGGLE_TILE_SIZE = 1280  # confirmed uniform across all 30,000 images (image-health check,
+# Stage4_Phase0-1_Data_Inspection.ipynb) — deliberately NOT opening every file just to read
+# a dimension that's already known constant. Opening all 30k images sequentially over the
+# Drive mount was observed to take 30+ minutes with zero progress output; this is the fix.
+
+
 def _build_kaggle_example(item, candidate, class_names):
     from pathlib import Path
 
-    from PIL import Image
-
-    with Image.open(item["image_path"]) as img:
-        w, h = img.size
+    w = h = KAGGLE_TILE_SIZE
     ex = build_training_example(
         item["image_path"], Path(item["label_path"]), w, h, "kaggle", candidate, class_names,
     )

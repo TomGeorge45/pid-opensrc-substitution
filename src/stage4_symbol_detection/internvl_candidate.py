@@ -5,10 +5,15 @@ get a working first result; InternVL3 cooperated with the same array-of-arrays f
 """
 
 import time
-import typing
 
-if typing.TYPE_CHECKING:
-    from PIL import Image
+import torch
+from PIL import Image
+from transformers import (
+    AutoModelForImageTextToText,
+    AutoProcessor,
+    MaxTimeCriteria,
+    StoppingCriteriaList,
+)
 
 from .qwen_candidate import SYMBOL_DETECTION_PROMPT, parse as parse_qwen_output
 
@@ -20,12 +25,7 @@ parse = parse_qwen_output
 
 
 def load():
-    """Returns (processor, model). ~16GB VRAM.
-    Imports torch/transformers lazily so this module can be imported (and `parse()` tested)
-    on machines without them installed — only load()/run() actually need the GPU stack."""
-    import torch
-    from transformers import AutoModelForImageTextToText, AutoProcessor
-
+    """Returns (processor, model). ~16GB VRAM."""
     t0 = time.time()
     processor = AutoProcessor.from_pretrained(MODEL_ID)
     model = AutoModelForImageTextToText.from_pretrained(
@@ -36,10 +36,7 @@ def load():
     return processor, model
 
 
-def run(processor, model, image: "Image.Image", prompt: str = SYMBOL_DETECTION_PROMPT, max_time_s: float = 60.0):
-    import torch
-    from transformers import MaxTimeCriteria, StoppingCriteriaList
-
+def run(processor, model, image: Image.Image, prompt: str = SYMBOL_DETECTION_PROMPT, max_time_s: float = 60.0):
     messages = [{
         "role": "user",
         "content": [{"type": "image", "image": image}, {"type": "text", "text": prompt}],
