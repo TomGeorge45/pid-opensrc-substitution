@@ -66,10 +66,10 @@
 
 | Item | Status | What exists / what's left |
 |---|---|---|
-| 4.1 Qwen3-VL zero-shot | 🔴 TODO | New — replaces old YOLO/RT-DETR plan. |
-| 4.2 InternVL3 zero-shot | 🔴 TODO | New. |
-| 4.3 Molmo zero-shot | 🔴 TODO | New. |
-| 4.4 Compare with validity gate | 🔴 TODO | New. Check parse-failure rates first; high failure → ranking is noise. |
+| 4.1 Qwen3-VL zero-shot | 🔴 TODO (deferred) | **Not the same as the earlier 10-sample Kaggle dev-set parse-rate check** — that ran on the wrong dataset (Kaggle, synthetic/typing-only) and measured parse success, not actual detection recall via the Phase 3 harness. Real run (on the 20 frozen Gupta test sheets) deliberately deferred (2026-07-10) — decided not worth doing yet. |
+| 4.2 InternVL3 zero-shot | 🔴 TODO (deferred) | Same as 4.1 — deferred, not done. |
+| 4.3 Molmo2 zero-shot | 🔴 TODO (deferred) | Same as 4.1 — deferred, not done. Cheapest/most promising candidate to actually run first when this phase is picked back up (100% parse rate, ~0.16h budget per 2.6), but not yet run through the real harness on Gupta. |
+| 4.4 Compare with validity gate | 🔴 TODO (deferred) | Blocked on 4.1-4.3. |
 
 ---
 
