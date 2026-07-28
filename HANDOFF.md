@@ -1,4 +1,21 @@
-# HANDOFF — current running state
+# HANDOFF — CLOSED
+
+**This project is concluded (2026-07-28).** The final documentation is the research record in
+[`RESEARCH/`](RESEARCH/00_INDEX.md) — read that first, not this file:
+
+| | |
+|---|---|
+| [`RESEARCH/00_INDEX.md`](RESEARCH/00_INDEX.md) | Start here — one-paragraph verdict and navigation |
+| [`RESEARCH/01_OBJECTIVE_AND_METHOD.md`](RESEARCH/01_OBJECTIVE_AND_METHOD.md) | Objective, hard rules, how the work was run across three sessions |
+| [`RESEARCH/02_RESULTS.md`](RESEARCH/02_RESULTS.md) | Every measured number with its sample size and reliability tier |
+| [`RESEARCH/03_WHAT_FAILED.md`](RESEARCH/03_WHAT_FAILED.md) | Failures and dead ends with diagnosed root causes |
+| [`RESEARCH/04_TAKEAWAYS.md`](RESEARCH/04_TAKEAWAYS.md) | The 30 transferable lessons |
+| [`RESEARCH/05_IF_RESUMED.md`](RESEARCH/05_IF_RESUMED.md) | State at close, unexecuted levers, traps to avoid |
+
+Everything below is the working log kept while the project was live. It is retained as history and is
+superseded by the research record wherever the two differ.
+
+---
 
 _This file supersedes older dated continuation docs. Read this first. It is kept continuously
 updated (see `CLAUDE.md` → "Handoff discipline") — overwritten in place, not versioned by date._
