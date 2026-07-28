@@ -1,0 +1,8 @@
+{
+  "_note": "Hand-read equipment extents, PX-2368-0180004-001. Read off rendered crops with a 200px coordinate grid (2026-07-27). These are the drawn SYMBOL bodies, not the name plates - the distinction R0 exists to make. Used where R0 found no plausible enclosing path (the sheet's CAD export groups strokes into region-sized paths).",
+  "extents": {
+    "t0029": {"tag": "XFMR-0301", "bbox": [2225, 2458, 2285, 2512], "note": "small transformer rectangle, XSY-0301A wired to it; plate sits right+below"},
+    "t0083": {"tag": "PBA-0201",  "bbox": [3665, 2370, 3755, 2445], "note": "LACT charge pump A: circle + triangular base; plate below at y2467"},
+    "t0084": {"tag": "PBA-0202",  "bbox": [3665, 2645, 3755, 2715], "note": "LACT charge pump B; plate below at y2738"}
+  }
+}

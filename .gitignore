@@ -12,3 +12,10 @@ checkpoints/
 runs/
 .env
 _token
+
+# virtualenvs, OS and bytecode junk
+.venv*/
+venv/
+__pycache__/
+*.pyc
+.DS_Store

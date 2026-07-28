@@ -1,0 +1,4 @@
+arm,sheet_id,stage,latency_s,cost_usd,llm_calls,notes
+pipeline3_proposed,OPEN100_0,R1+R2a+R2b_full,12.029,0.0,0,
+pipeline2_local,OPEN100_0,hierarchy_shim,0.036,0.0,2,fake call_llm wiring test
+pipeline1_prod,OPEN100_0,hierarchy_shim,0.036,0.009,2,"fake call_llm wiring test, is_prod=True to exercise usage_cost()"

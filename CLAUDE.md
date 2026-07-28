@@ -11,6 +11,20 @@ LLM, or OCR model, fine-tuned per stage — then prove the local version matches
 because it has full real ground truth and its winner becomes the **shared base VLM** every
 other stage reuses. Nothing else is in scope here until Stage 4 is locked.
 
+## Handoff discipline (standing rule, every session)
+
+Maintain a single running file, **`HANDOFF.md`** (repo root), and keep it current — update it
+at every reasonable checkpoint: after a decision is made, after finishing a meaningful chunk of
+work, before context is likely to be compacted, and always before ending a session. **Overwrite
+it in place** — do not create a new dated file each time. It should always answer "if this chat
+ended right now, what would the next session need to know": what changed, what was decided and
+why, what's open/blocked, and anything time-sensitive (e.g. files sitting in an ephemeral
+scratchpad path that need rescuing before they're cleaned up).
+
+Older one-off dated docs (`AI_Continuation_Document-*.md`, `Session_Writeup_*.md`) are historical
+archive from before this rule existed — never delete them, but `HANDOFF.md` is the current
+source of truth and should be read first.
+
 ## Hard rules — read before writing any code
 
 1. **NO ML detection models.** No YOLO, RT-DETR, Relationformer, U-Net, Siamese, or any
@@ -43,6 +57,9 @@ other stage reuses. Nothing else is in scope here until Stage 4 is locked.
 
 ## Read first, in this order
 
+0. `HANDOFF.md` — the current running state of work, if it exists. Read this FIRST, before
+   anything else in this list — it supersedes the older dated continuation docs as the source of
+   truth for "what's going on right now."
 1. `PID_Local_Substitution_Spec.md` — why this project exists, the substitution rule, the
    shared-base-VLM strategy (§5), the three VLM candidates (§5, Qwen3-VL / InternVL3 / Molmo)
 2. `Stage4_Benchmarking_Checklist.md` — the actual execution plan, phase by phase, with a
