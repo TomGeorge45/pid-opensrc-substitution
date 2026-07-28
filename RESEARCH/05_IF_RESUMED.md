@@ -21,7 +21,7 @@ covered, and does not trust numbers further than their evidence allows.
 ## 2. What does not work, and should not be retried as-is
 
 - **The local relation validator.** 52.6% across five prompt variants, 0/8 kept in-pipeline. Do not
-  spend more GPU time on it without a genuinely held-out AG/RIVE-domain eval and the remaining
+  spend more GPU time on it without a genuinely held-out customer-PDF-domain eval and the remaining
   training epochs finished.
 - **General mixed-task fine-tuning.** Two generations, both destructive. Language-only, per-stage only.
 - **Nemotron for detection.** Emits DocVQA text bands, diagnosed root cause.
@@ -91,19 +91,19 @@ Ordered by expected return per unit of effort. All were identified during the pr
 ```
 # the relationship-stage headline result
 PYTHONPATH=src/relation_bench .venv-e2e/bin/python \
-  scripts/reproduce_px2368_final.py <path-to-PX-2368-0180004-001.pdf>
+  scripts/reproduce_sheet1_final.py <sheet-stem> <path-to-that-sheet.pdf>
 # expect: precision 93.9%, recall 86.7%, F1 0.902, 42 claims, 0 violations
 ```
 
 Durable artifacts on Hugging Face (`timthy45/pnid-extraction-datasets`): source sheets
-(`sheets/AG_PNID.zip`, `sheets/RIVE_LTTS_Sample.zip`), the PID2Graph corpus
+(the two source-sheet archives under `sheets/`), the PID2Graph corpus
 (`pid2graph/PID2Graph.zip`, 9.3 GB), extraction outputs (`benchmarks/extraction_2026-07-24/`), probe
 and candidate-crop bundles, and the 42-crop review bundle. Model checkpoints live at
 `timthy45/qwen3vl-pnid-domain-base` (`v3-stage13/latest`, `v3-relation/latest`, `v2/latest`) and
 `timthy45/molmo2-pnid-pointing-lora/v1`.
 
-In-repo: `benchmarks/px2368_adjudication_42claims_2026-07-27.json` (32 real / 7 false / 3 unsure with
-per-claim reasoning), `src/relation_bench/hand_extents/px2368.json` (both extent variants, the four
+In-repo: `benchmarks/sheet1_adjudication_42claims_2026-07-27.json` (32 real / 7 false / 3 unsure with
+per-claim reasoning), `src/relation_bench/hand_extents/sheet1.json` (both extent variants, the four
 recovered seeds, the 15-edge GT), and `benchmarks/pipeline3_artifact_source_2026-07-28.html`.
 
 ## 7. Two housekeeping items
@@ -113,6 +113,6 @@ never committed, so git history is clean — but it sat in plaintext on disk acr
 there were two prior near-miss incidents where an editor re-saved a scrubbed token.
 
 **This repository is public and contains real customer drawing content.** The PDFs are gitignored, but
-sheet identifiers and equipment tags (`MBD-0100`, `PX-2368-0180004-001`, `NBK-0300` and others) appear
+sheet identifiers and equipment tags (`VESSEL-1`, `SHEET-1`, `TREATER-1` and others) appear
 throughout the documentation and results. If any of that is customer-identifying, it is far cheaper to
 address now than after the repo has been cloned.

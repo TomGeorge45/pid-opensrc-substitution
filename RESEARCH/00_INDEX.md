@@ -31,6 +31,20 @@ boxes ticked and `base.md` was never filled in.
 | [`04_TAKEAWAYS.md`](04_TAKEAWAYS.md) | The transferable lessons — the things worth carrying to any similar project |
 | [`05_IF_RESUMED.md`](05_IF_RESUMED.md) | Exact state at close, the highest-leverage unexecuted levers, and the traps a successor would otherwise re-walk into |
 
+## A note on identifiers
+
+Customer drawing identifiers and equipment tags are **pseudonymised** throughout these documents.
+Sheets appear as `SHEET-1` … `SHEET-6`, equipment by role (`VESSEL-1`, `TREATER-1`, `PUMP-A`),
+and the two source-sheet families as `Family-A` / `Family-B`. Numbering is stable across all six
+files, so cross-references still line up, and every technical finding reads the same as it did with
+the real names.
+
+Two consequences worth knowing. The real identifiers still appear in the *working* documents this
+record was built from (`Benchmark_Gaps_Register.md`, `Pipeline3_v2_*.md`, `HANDOFF.md`), in the code
+and its comments, and in the committed adjudication and hand-extent JSON — de-identification was
+applied to this record, not to the whole repository. And the reproduction script takes the sheet
+identifier as an argument rather than hardcoding it, so you must supply the real stem to run it.
+
 ## How to read the numbers
 
 Three reliability tiers are used throughout, and they matter more than the figures:

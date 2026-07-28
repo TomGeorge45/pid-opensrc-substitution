@@ -85,7 +85,7 @@ that never actually check whether the traced path reaches the target. Not incohe
 wrongness.
 
 **The adapter's own 89.2% benchmark did not transfer.** That number is real but was measured on
-PID2Graph crops, the adapter's training domain. On real AG/RIVE sheets it degenerated completely.
+PID2Graph crops, the adapter's training domain. On real customer-PDF sheets it degenerated completely.
 Compounding it: the adapter was only ever trained for **1 of 3 epochs** (paused at ~44,853/64,911
 steps on a budget cutoff, never resumed), and its evaluation was **seed-disjoint, not file-disjoint**.
 
@@ -176,7 +176,7 @@ was created. An entire section of the plan had been built around the wrong code 
 
 **A silent drop that forced a design decision.** A detection with an empty `value` produces **no
 entity, no error, and no `unresolved` entry.** Confirmed by direct test: `value=None` → zero entities;
-the same detection with `value="V-101"` → one entity. Consequence: **Molmo2 alone produces zero usable
+the same detection with `value="<a tag>"` → one entity. Consequence: **Molmo2 alone produces zero usable
 entities**, because it emits points with no text. This is the entire reason the tag-matching design
 exists.
 

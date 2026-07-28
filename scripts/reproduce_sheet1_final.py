@@ -1,4 +1,4 @@
-"""Reproduce the final 2026-07-28 Pipeline 3 v2 numbers on PX-2368-0180004-001.
+"""Reproduce the final 2026-07-28 Pipeline 3 v2 numbers on the development sheet (SHEET-1).
 
 Exists because the reported figures depended on inputs that lived only in a chat transcript —
 three hand-read equipment extents and four hand-recovered instrument seeds. Both are now in
@@ -9,7 +9,9 @@ Expected output (as reported): precision 93.9%, recall 86.7%, F1 0.902, 42 claim
 
 Needs: the sheet PDF (HF `sheets/RIVE_LTTS_Sample.zip`), the extraction JSON
 (HF `benchmarks/extraction_2026-07-24/...`), and `.env` with HF_TOKEN.
-Run with the venv on the path:  PYTHONPATH=src/relation_bench .venv-e2e/bin/python scripts/reproduce_px2368_final.py <pdf_path>
+Run with the venv on the path:
+  PYTHONPATH=src/relation_bench .venv-e2e/bin/python \
+    scripts/reproduce_sheet1_final.py <sheet-stem> <path-to-that-sheet.pdf>
 """
 from __future__ import annotations
 
@@ -25,17 +27,19 @@ from entities import SymbolNode, classify_prod_tags, detect_ports_from_sheet_ref
 from extent_resolution import (extract_page_vector_paths, resolve_extent_from_seed,
                                resolve_extents, seed_from_bbox_center)
 
-SHEET = "PX-2368-0180004-001"
-EXTRACTION = f"benchmarks/extraction_2026-07-24/{SHEET}_gpt55low.json"
-HAND = "src/relation_bench/hand_extents/px2368.json"
-ADJUDICATION = "benchmarks/px2368_adjudication_42claims_2026-07-27.json"
+# Sheet identity is a PARAMETER, not a baked-in constant — partly so this script generalises,
+# partly so no customer drawing identifier is hardcoded in the repo. Pass the sheet stem as the
+# first argument; it is used to locate the extraction JSON on Hugging Face.
+HAND = "src/relation_bench/hand_extents/sheet1.json"
+ADJUDICATION = "benchmarks/sheet1_adjudication_42claims_2026-07-27.json"
 
 
-def main(pdf_path: str) -> int:
+def main(sheet_stem: str, pdf_path: str) -> int:
     load_dotenv()
+    extraction = f"benchmarks/extraction_2026-07-24/{sheet_stem}_gpt55low.json"
     cfg = json.load(open(HAND))
     tok = os.environ.get("HF_TOKEN")
-    d = json.load(open(hf_hub_download("timthy45/pnid-extraction-datasets", EXTRACTION,
+    d = json.load(open(hf_hub_download("timthy45/pnid-extraction-datasets", extraction,
                                        repo_type="dataset", token=tok)))
     dpi = d["drawing"]["render_dpi"]
     paths, page = extract_page_vector_paths(pdf_path, 0, render_scale=dpi / 72.0)
@@ -89,7 +93,7 @@ def main(pdf_path: str) -> int:
     R = rec_hits / len(gt)
     F1 = 2 * P * R / (P + R) if (P + R) else 0.0
 
-    print(f"{SHEET} — Pipeline 3 v2 final")
+    print(f"{sheet_stem} — Pipeline 3 v2 final")
     print(f"  symbols={len(es.symbols)} ports={len(es.ports)} labels={len(es.labels)}")
     print(f"  claims={len(r.relations)} (on_sheet={len(r.on_sheet)} boundary={len(r.boundary)})")
     print(f"  violations={len(r.violations)}")
@@ -99,7 +103,8 @@ def main(pdf_path: str) -> int:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print(__doc__)
+        print("usage: reproduce_sheet1_final.py <sheet-stem> <path-to-that-sheet.pdf>")
         sys.exit(2)
-    sys.exit(main(sys.argv[1]))
+    sys.exit(main(sys.argv[1], sys.argv[2]))

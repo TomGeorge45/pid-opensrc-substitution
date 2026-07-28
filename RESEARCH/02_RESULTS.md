@@ -192,14 +192,14 @@ through the agent's `read_shapes`/`read_regions` path.
 
 | Sheet | Arm 0 | Arm 1 | Arm 2 | Arm 3 | **Union** |
 |---|---|---|---|---|---|
-| GD-B-540-DP-2920-005 | 0.028 | 0.055 | 0.606 | 0.550 | **0.835** |
-| GD-T-435-DT-2042-056 | 0.000 | 0.818 | 0.182 | 0.636 | **0.909** |
-| PX-2365-0140006-001 | 0.149 | 0.040 | 0.524 | 0.669 | **0.843** |
-| PX-2368-0180004-001 | 0.200 | 0.120 | 0.460 | 0.540 | **0.720** |
+| SHEET-4 | 0.028 | 0.055 | 0.606 | 0.550 | **0.835** |
+| SHEET-6 | 0.000 | 0.818 | 0.182 | 0.636 | **0.909** |
+| SHEET-2 | 0.149 | 0.040 | 0.524 | 0.669 | **0.843** |
+| SHEET-1 | 0.200 | 0.120 | 0.460 | 0.540 | **0.720** |
 
 **The union beats the best single arm on all four sheets**, and no single arm is consistently best —
 Arm 1 wins the small sheet at 0.818 and is nearly worthless on the big ones at 0.040–0.055. On an
-earlier 3-arm run the union reached **0.850 on PX-2365-0150022-001, beating GPT-5.5's 0.75 on that
+earlier 3-arm run the union reached **0.850 on SHEET-3, beating GPT-5.5's 0.75 on that
 sheet.** Directional (n=4 and n=2 sheets, no aggregate mean was ever computed), but it is the closest
 this project came to frontier parity with local models.
 
@@ -217,14 +217,14 @@ numbers; the framing was wrong. Second, `revR` is arguably the wrong ruler entir
 
 | Sheet | Qwen3-VL-8B | GPT-5.5-high |
 |---|---|---|
-| GD-T-435-DR-2031-030 | **0.810** | 0.841 — **96% of GPT, near-parity** |
-| PX-2365-0150022-001 | 0.183 | 0.75 |
-| PX-2368-0180004-001 | 0.140 | 0.98 |
+| SHEET-5 | **0.810** | 0.841 — **96% of GPT, near-parity** |
+| SHEET-3 | 0.183 | 0.75 |
+| SHEET-1 | 0.140 | 0.98 |
 | Mean | **0.378** | 0.857 |
 
-**A family split, diagnosed rather than guessed.** GD sheets have simple regular tags and Qwen nearly
-matches the frontier model. PX truth is dominated by multi-token compound line-tags
-(`10"-WS-2630-48-MSDX1-HSW`) and suffixed bubbles (`LAL2160A`) where one dropped trailing character
+**A family split, diagnosed rather than guessed.** Family-A sheets have simple regular tags and Qwen nearly
+matches the frontier model. Family-B truth is dominated by multi-token compound line-tags
+(e.g. `NN"-XX-NNNN-NN-XXXXXN-XXX`) and suffixed bubbles (a suffixed instrument bubble) where one dropped trailing character
 scores zero. **A read-precision gap, not an extraction-strategy gap.**
 
 Confounds recorded honestly: GPT-5.5's numbers used high reasoning effort (~980 s and $4.20 per
@@ -232,7 +232,7 @@ sheet, versus Qwen's ~470–700 s under a 4k-token cap) with a prompt co-tuned o
 iterations against this exact corpus.
 
 Prompt iteration history, each round fixing an observed failure: round 1 (JSON-Schema dump) → Qwen
-echoed schema defaults, **zero tags on every sheet**; round 2 (concrete example) → GD reached 0.810
+echoed schema defaults, **zero tags on every sheet**; round 2 (concrete example) → a Family-A sheet reached 0.810
 but one sheet **dumped OCR token IDs as tag texts**; round 3 (forbid bare numbers, enumerate tag
 categories) → fixed the ID dump (+0.033) and regressed another sheet.
 

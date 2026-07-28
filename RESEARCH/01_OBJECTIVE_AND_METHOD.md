@@ -88,7 +88,7 @@ write-up, and the next began by reading it. That produced the four dated session
   unrecoverable and another that flagged a completed upload as unverified.
 - **Numbers survive in prose but not in code.** Three equipment extents and four instrument
   coordinates that produced the final headline result existed only in a chat transcript. They were
-  persisted to `hand_extents/px2368.json` with a reproduction script only at the very end — before
+  persisted to `hand_extents/sheet1.json` with a reproduction script only at the very end — before
   that, the reported figure could not be regenerated from the repo.
 - **Parallel duplication is possible.** The same task was once issued to two sessions; both
   implemented it independently, producing two implementations of one fix and two non-matching reruns
