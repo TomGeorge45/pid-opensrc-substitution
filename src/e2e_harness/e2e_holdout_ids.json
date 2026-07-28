@@ -1,0 +1,9 @@
+{
+  "_comment": "POC holdout, frozen 2026-07-16. Option (c) per E2E_Harness_Plan.md §2: existing seed-disjoint PID2Graph split accepted for this POC; relation-set F1 caveat applies (may be in-sample for the v3-relation adapter). Sheets chosen for moderate equipment-node count (not the sparsest, not the densest) from each tree.",
+  "sheets": [
+    {"tree": "PID2Graph OPEN100", "stem": "8", "n_total_nodes": 181, "n_equipment_nodes": 40, "n_edges": 179},
+    {"tree": "PID2Graph OPEN100", "stem": "1", "n_total_nodes": 320, "n_equipment_nodes": 41, "n_edges": 308},
+    {"tree": "Dataset PID", "stem": "246", "n_total_nodes": 399, "n_equipment_nodes": 96, "n_edges": 445},
+    {"tree": "Dataset PID", "stem": "443", "n_total_nodes": 367, "n_equipment_nodes": 90, "n_edges": 413}
+  ]
+}

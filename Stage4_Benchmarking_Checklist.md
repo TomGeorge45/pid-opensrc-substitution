@@ -10,6 +10,97 @@
 
 ---
 
+## 0. Infrastructure, Setup, and Model Benchmarking History (read this first)
+
+This section is a standing reference — updated as the project evolves, not a one-time checklist item. It covers *how* this project actually runs (tooling, why it's set up this way) and *what has been tried so far* (every model tested, how it was fine-tuned, and how results changed across iterations). Read this before touching Phase 0 below, since some of Phase 0's original assumptions (Drive-based persistence) have since been superseded.
+
+### 0.A The actual working setup: VS Code + Colab + Hugging Face Hub
+
+**Three pieces, each doing a different job:**
+
+- **VS Code, with the Microsoft "Jupyter" extension (`ms-toolsai.jupyter`), local on the Mac** — where notebooks (`.ipynb` files) are authored, reviewed, and version-controlled. This extension is what renders a notebook as editable cells inside VS Code at all (without it, a `.ipynb` is just a JSON file). Nothing executes here — there's no usable GPU on the local machine, and this local copy is **never connected to a live kernel**. This is the source of truth for code, not for execution.
+- **Google Colab (separate browser tab, GPU runtime)** — where everything actually *runs*. Training and inference happen on a Colab Pro+ GPU runtime (A100 preferred over H100 — the two are similar value once training doesn't need to finish in one sitting, since a per-hour price gap that roughly tracks a per-hour speed gap is a wash; A100 wins as the safer/cheaper default whenever there's no single-session urgency). Code is copied from VS Code into Colab to run, then results/checkpoints are pulled back out.
+- **Hugging Face Hub (private repos, personal account)** — the shared storage layer for both raw datasets and trained checkpoints. Two repos: a dataset repo (`timthy45/pnid-extraction-datasets` — Gupta/Kaggle/PID2Graph zips, benchmark result CSVs) and a model repo (`timthy45/qwen3vl-pnid-domain-base` — every adapter checkpoint, pushed periodically during training).
+
+**How these three actually connect — and the one thing that trips people up every time:** there is **no live link** between the VS Code copy of a notebook and whatever is running in the Colab browser tab. They are two independent copies of the same file. The real flow is:
+
+```
+VS Code (.ipynb on disk)  --[manual copy/paste or re-upload]-->  Colab (live GPU kernel)
+                                                                        |
+                                                                        v
+                                                          huggingface_hub calls (token from Config cell)
+                                                                        |
+                                                                        v
+                                                        Hugging Face Hub (dataset repo + model repo)
+```
+
+Editing a cell in VS Code **does nothing to an already-running Colab session** until that cell is manually re-copied over — the Colab tab keeps executing whatever it loaded last, oblivious to local edits. This has caused real, repeated confusion: at one point, having the notebook open in VS Code while it was being edited via automation caused VS Code's own in-memory buffer to *resave stale content back over the edit* — including reintroducing a real API token that had just been scrubbed out. **Lesson for anyone continuing this work: after editing a notebook file, always re-copy the changed cell(s) into the actual live Colab tab yourself — don't assume it updates automatically, and don't assume the file on disk is what's currently running in Colab.**
+
+**Why not Google Drive (the obvious alternative)?** Tried first, ruled out for a structural reason, not a preference: `drive.mount()` uses an OAuth flow that's hard-bound to the account that owns the Colab runtime. Since the GPU quota (Colab Pro+) lives on a different account than the one doing the work, every mount attempt sent a 2FA verification code to the *runtime owner's* phone — regardless of browser, device, or incognito mode. This is not fixable from inside the notebook, and it specifically breaks any unattended/overnight run (nobody there to approve the prompt). Hugging Face Hub's alternative — a single bearer token, no OAuth, no 2FA, no account coupling — decouples "who owns the compute" from "who owns the storage" entirely. This is the reason, not a stylistic choice; don't reintroduce Drive as a shortcut later without solving the 2FA problem first.
+
+**Practical consequences of this setup, learned the hard way:**
+- **HF's storage backend ("Xet") occasionally serves a broken signed URL** (`403 Forbidden: SignatureError: invalid key pair id`), confirmed server-side (persists even with the `hf_xet` client package fully uninstalled). Every download in every notebook now goes through a hardened retry wrapper: up to ~20 attempts, exponential backoff (10s→90s), and critically *no* `force_download=True` on retries (that wastes bandwidth restarting a good partial download — HF mints a fresh signed URL on every call regardless, so a plain retry gets the same benefit for free). Every real occurrence of this bug has cleared within a handful of retries.
+- **ModelScope (Alibaba's model hub) was tried as a bypass for the above and rejected.** It hosts the same public Qwen weights on different infrastructure (so the Xet bug can't happen there), but on this network it measured ~1Mbps vs ~200Mbps on HF — a 200x penalty that makes it strictly worse despite dodging the bug. Don't re-add it.
+- **Every checkpoint push to a fixed HF path is a new git commit under the hood.** Historical LFS blobs stay counted against storage quota even though the file listing only shows the current version — this silently ate through a 100GB free-tier quota (211 commits, 82.5GB on one repo) before being caught. Fixed by deleting and recreating the repo with just the checkpoints actually needed; worth periodically checking commit count (`HfApi().list_repo_commits(...)`) if storage warnings reappear.
+- **Compute-cost discipline (standing directive from Tom's manager, not yet fully implemented in every notebook):** do CPU-only work (dataset download/extraction, OCR, building training/eval example pools) locally on the Mac, not inside the paid GPU Colab session — then zip and upload the prepared result to HF so Colab only does the GPU-dependent steps (model load, train/infer, push results) before immediately calling `from google.colab import runtime; runtime.unassign()` to release the GPU. Apply this to any new notebook going forward; retrofit older ones opportunistically.
+
+### 0.B How to set this up from scratch
+
+1. **Clone/open this repo in VS Code.** All notebooks live under `notebooks/`; this is where they're written and edited.
+2. **Open a separate browser tab at colab.research.google.com**, connect to a GPU runtime (A100 preferred; check VRAM with `!nvidia-smi` — 80GB comfortably fits an 8B model plus multiple LoRA adapters loaded simultaneously).
+3. **Create two private HF repos** under the working personal account (not the org/boss's account, to keep storage independent of the compute-quota owner): one `dataset` repo for raw data + result CSVs, one `model` repo for checkpoints.
+4. **Generate an HF token with write access.** Paste it only into the notebook's Config cell when running in Colab — **never commit a real token to this repo.** Every notebook uses a placeholder (`"paste-your-hf-token-here"`) by default; always re-check for a leaked real token (`grep -oE "hf_[A-Za-z0-9]{20,}"`) before any commit, since editors left open on a notebook can silently resave a pasted token back into the tracked file.
+5. **Use `huggingface_hub` for all data movement** (`hf_hub_download`, `snapshot_download`, `HfApi().upload_file`/`upload_folder`) instead of `drive.mount()` — wrapped in the hardened retry pattern described above.
+6. **Never reach for ModelScope or Drive as a fix** for a slow/failed download — both have been tried and are proven net negatives on this specific setup.
+7. **Follow the compute-cost discipline** above for any new notebook: CPU-prep locally → zip → HF → GPU-only Colab session → `runtime.unassign()`.
+
+### 0.C Models tested, how they were fine-tuned, and how results changed
+
+Two separate tracks exist in this project: **Stage 4 (symbol detection)**, which is genuinely in-scope per this document's charter, and **the reasoning-stage LoRA work** (stages 1/2/5/10.5/12/13), which uses Qwen3-VL-8B as a shared base and is being developed alongside Stage 4 at Tom's explicit direction even though it sits outside this document's original "Stage 4 only" framing. Both are recorded here since they share the same infrastructure and models.
+
+#### Stage 4 (symbol detection) candidates
+
+| Model | Role | Fine-tuning | Result |
+|---|---|---|---|
+| **Molmo2-O-7B** | Stage 4 detection candidate (native pixel-pointing) | Zero-shot only so far, at multiple tiling/enhancement configs | Baseline config: full-20-sheet zero-shot F1 = **0.434** vs the incumbent cloud agent's **0.380** (both still below the 0.70 pass bar). An improved config (512px tiles, 2× upscale, autocontrast enhancement) subsequently **beat the incumbent** on the full 20 test sheets — the exact number for that run should be pulled fresh from `stage4-status.html` rather than quoted from memory here, since it wasn't directly re-verified while writing this section. |
+| **GPT-5.5 (low reasoning)** | Cloud/API reference point for detection | Not fine-tuned (prompted zero-shot) | At one checkpoint in testing, GPT-5.5 was recorded as the **new best zero-shot detector** on the full 20 sheets, ahead of Molmo2's baseline config at the time. Whether it still leads after Molmo2's improved config needs a direct side-by-side re-check. |
+| **NVIDIA Nemotron-Nano-VL-8B** | Considered, then **ruled out** | Zero-shot probe only | Given a symbol-grounding task, it emits DocVQA-style text-line/layout bands (its training distribution) instead of boxes on symbols — confirmed visually (~90 wall-to-wall horizontal strips, zero boxes on actual symbols). Kept only as a plausible candidate for pure text-reading stages, not detection. |
+| **InternVL3 (8B)** | Original spec candidate | Not deeply tested in this repo | Named in the original 3-way bake-off design (`PID_Local_Substitution_Spec.md` §5) but no benchmark run for it is recorded in this session's history — don't assume it's been ruled in or out. |
+| **Claude (claude-sonnet-4-6)** | Incumbent production reference | N/A (already deployed) | Used as the "did we beat the current cloud agent" reference column — F1 0.380 on the full 20 sheets, the number Molmo2/GPT-5.5 are measured against. |
+
+#### Reasoning-stage LoRA adapters (Qwen3-VL-8B-Instruct, shared base for stages 1/2/5/10.5/12/13)
+
+**v1 — mixed-task domain adaptation, all-linear LoRA.** One adapter trained on four tasks at once: OCR/tag-listing, symbol counting, typed symbol summary (Kaggle), and connectivity Q&A (PID2Graph). `target_modules="all-linear"` (touches the vision tower too). Counting collapsed to "always answer 0" (100% zero-answers against a 12% true zero-rate) and full-tile tag listing dropped from the base's 39% to 2%.
+
+**v2 — same mixed-task approach, targeted fixes.** Capped zero-answer tiles at 15% of training data and varied phrasing to fix v1's counting collapse (0% zero-answers afterward, MAE improved 15.0→12.3). Connectivity and typing held steady. But **tag reading was still destroyed** — even with a redesigned task (clean single-tag crops instead of full-tile listing), the adapter scored 0% on the exact crops it trained on, while the untouched base model read 72% of the same crops. This was the finding that mattered: two different training rounds, two different reading-task designs, same result — strongly implicating the training process itself (LoRA touching the vision tower with gradients that never rewarded glyph precision), not the task design.
+
+| Task (metric) | Base | v1 | v2 |
+|---|---|---|---|
+| Relation accuracy (real PID2Graph GT) | 56–77%* | 90% | 88% |
+| Typed-summary class F1 | 0.00 | 0.36 | 0.34 |
+| Count: answered "0" (truth 12%) | 6% | 100% ✗ | 0% ✓ |
+| Count MAE | 16.3 | 15.0 | 12.3 |
+| Tag reading (single-tag crops) | 72% | — | 0% ✗ |
+| Full-tile tag listing (v1's task) | 39% | 2% ✗ | 2% ✗ |
+
+*Base relation accuracy varies with how many answers were decidable (34–37 of 50 undecided without a clean yes/no prompt).
+
+**Conclusion drawn from v1/v2: general, mixed-task training is destructive** — a fix for one task reliably damaged an unrelated one. This motivated the shift to **v3: dedicated, per-stage adapters, language-only LoRA** (vision tower explicitly excluded from `target_modules`, discovered at runtime by inspecting the loaded model and filtering out anything with "visual"/"vision"/"image_tower" in its name — the direct fix for the all-linear hypothesis above).
+
+**v3 results (all measured at n=120, or n=65 for the naturally-smaller OCR pool — not the noisy n=25 samples used earlier in the project, which were shown to swing a "win" into a "loss" on a single flipped answer):**
+
+| Task | GPT-5.5-low | Qwen base (no adapter) | Dedicated v3 adapter | Old v2 general adapter (n=25, unverified at scale) |
+|---|---|---|---|---|
+| Entity validation (stage 13) — "is a real symbol here?" | 66.7% | 45.0% (below chance) | **89.2%** — fully trained, 3/3 epochs | 35.0% (below chance) |
+| Relation validation (stage 12/10.5) — "are these connected?" | 72.5% | 80.0% | **89.2%** — partially trained, paused mid-epoch-0 at step ~44,853/64,911 | 84.0% (noisy — a single-question margin) |
+| Text extraction (stage 5) — OCR A/B tie-break | 98.5% | **100.0%** | n/a — no adapter built; base already wins | 66.7% (mostly unparseable answers, low confidence) |
+
+Two adapter-specific notes: (1) **v3-stage13's win came from deliberate absence supervision** — three decoy types (empty region, shifted near-miss, wrong-size box) mixed 50/50 with real boxes during training, specifically to prevent the "always say yes" bias that made the old v2 adapter score *below chance* on this exact task. (2) **v3-relation's eval, while real, isn't fully rigorous yet** — it's seed-disjoint from training (different random seed, same source data trees) rather than file-disjoint like the Gupta-based tasks; a genuinely held-out file split is still owed if this number needs to support a bigger claim later.
+
+**Where things stand:** v3-stage13 is finished and is the clear best model on its task, beating both GPT-5.5 and the old general adapter. v3-relation already clears its adoption bar (beats prompted-base by a real margin at a trustworthy sample size) despite being only a third of the way through training — resuming its remaining two epochs is a known, not-yet-executed next step. Text extraction needs no adapter at all — the untouched base model is already the best performer, and past attempts to fine-tune it only made it worse.
+
+---
+
 ## Phase 0 — Environment Setup
 
 ### 0.1 Provision Colab Pro+ session

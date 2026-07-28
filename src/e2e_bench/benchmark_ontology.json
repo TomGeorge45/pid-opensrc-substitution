@@ -1,0 +1,574 @@
+{
+  "_comment": "Frozen benchmark ontology (pid-ml Conversion_Layer_Plan.md D2). This is a deliberate stand-in for the real per-tenant runtime ontology (Agent_Pipeline_Facts.md flag 3 - the real ontology is fetched per-tenant at runtime, not fixed in code). This file is loaded via OntologyRelationIndex.from_entries() for the end-to-end benchmark only. IMPORTANT: any (source_entity_type, target_entity_type) pair NOT covered here silently produces NO relation when a local/GPT model proposes one for that pair (build_relations -> unresolved.missing_relation_schema) - this ontology covers every ordered pair of entity_types below generically via 'connects to', plus a named 'Installed Valves' relation asset->X for skid-membership, matching what sub_agents/skid_grouping/driver.py's sidecar format expects as a relation name.",
+  "entity_types": [
+    "valve",
+    "instrumentation",
+    "pump",
+    "tank",
+    "general",
+    "inlet_outlet",
+    "asset"
+  ],
+  "relations": [
+    {
+      "source_entity_type": "valve",
+      "target_entity_type": "valve",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "valve",
+      "target_entity_type": "instrumentation",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "valve",
+      "target_entity_type": "pump",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "valve",
+      "target_entity_type": "tank",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "valve",
+      "target_entity_type": "general",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "valve",
+      "target_entity_type": "inlet_outlet",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "valve",
+      "target_entity_type": "asset",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "instrumentation",
+      "target_entity_type": "valve",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "instrumentation",
+      "target_entity_type": "instrumentation",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "instrumentation",
+      "target_entity_type": "pump",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "instrumentation",
+      "target_entity_type": "tank",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "instrumentation",
+      "target_entity_type": "general",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "instrumentation",
+      "target_entity_type": "inlet_outlet",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "instrumentation",
+      "target_entity_type": "asset",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "pump",
+      "target_entity_type": "valve",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "pump",
+      "target_entity_type": "instrumentation",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "pump",
+      "target_entity_type": "pump",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "pump",
+      "target_entity_type": "tank",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "pump",
+      "target_entity_type": "general",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "pump",
+      "target_entity_type": "inlet_outlet",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "pump",
+      "target_entity_type": "asset",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "tank",
+      "target_entity_type": "valve",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "tank",
+      "target_entity_type": "instrumentation",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "tank",
+      "target_entity_type": "pump",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "tank",
+      "target_entity_type": "tank",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "tank",
+      "target_entity_type": "general",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "tank",
+      "target_entity_type": "inlet_outlet",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "tank",
+      "target_entity_type": "asset",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "general",
+      "target_entity_type": "valve",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "general",
+      "target_entity_type": "instrumentation",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "general",
+      "target_entity_type": "pump",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "general",
+      "target_entity_type": "tank",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "general",
+      "target_entity_type": "general",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "general",
+      "target_entity_type": "inlet_outlet",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "general",
+      "target_entity_type": "asset",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "inlet_outlet",
+      "target_entity_type": "valve",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "inlet_outlet",
+      "target_entity_type": "instrumentation",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "inlet_outlet",
+      "target_entity_type": "pump",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "inlet_outlet",
+      "target_entity_type": "tank",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "inlet_outlet",
+      "target_entity_type": "general",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "inlet_outlet",
+      "target_entity_type": "inlet_outlet",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "inlet_outlet",
+      "target_entity_type": "asset",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "valve",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "instrumentation",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "pump",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "tank",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "general",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "inlet_outlet",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "asset",
+      "forward_relation_name": "connects to",
+      "reverse_relation_name": "connected from",
+      "cardinality": "MANY_TO_MANY",
+      "raw": {
+        "benchmark_generic": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "valve",
+      "forward_relation_name": "Installed Valves",
+      "reverse_relation_name": "Installed In",
+      "cardinality": "ONE_TO_MANY",
+      "raw": {
+        "benchmark_skid_membership": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "instrumentation",
+      "forward_relation_name": "Installed Valves",
+      "reverse_relation_name": "Installed In",
+      "cardinality": "ONE_TO_MANY",
+      "raw": {
+        "benchmark_skid_membership": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "pump",
+      "forward_relation_name": "Installed Valves",
+      "reverse_relation_name": "Installed In",
+      "cardinality": "ONE_TO_MANY",
+      "raw": {
+        "benchmark_skid_membership": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "tank",
+      "forward_relation_name": "Installed Valves",
+      "reverse_relation_name": "Installed In",
+      "cardinality": "ONE_TO_MANY",
+      "raw": {
+        "benchmark_skid_membership": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "general",
+      "forward_relation_name": "Installed Valves",
+      "reverse_relation_name": "Installed In",
+      "cardinality": "ONE_TO_MANY",
+      "raw": {
+        "benchmark_skid_membership": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "inlet_outlet",
+      "forward_relation_name": "Installed Valves",
+      "reverse_relation_name": "Installed In",
+      "cardinality": "ONE_TO_MANY",
+      "raw": {
+        "benchmark_skid_membership": true
+      }
+    },
+    {
+      "source_entity_type": "asset",
+      "target_entity_type": "asset",
+      "forward_relation_name": "Installed Valves",
+      "reverse_relation_name": "Installed In",
+      "cardinality": "ONE_TO_MANY",
+      "raw": {
+        "benchmark_skid_membership": true
+      }
+    }
+  ]
+}
