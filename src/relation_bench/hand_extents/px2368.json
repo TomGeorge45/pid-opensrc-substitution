@@ -1,8 +1,33 @@
 {
-  "_note": "Hand-read equipment extents, PX-2368-0180004-001. Read off rendered crops with a 200px coordinate grid (2026-07-27). These are the drawn SYMBOL bodies, not the name plates - the distinction R0 exists to make. Used where R0 found no plausible enclosing path (the sheet's CAD export groups strokes into region-sized paths).",
-  "extents": {
-    "t0029": {"tag": "XFMR-0301", "bbox": [2225, 2458, 2285, 2512], "note": "small transformer rectangle, XSY-0301A wired to it; plate sits right+below"},
-    "t0083": {"tag": "PBA-0201",  "bbox": [3665, 2370, 3755, 2445], "note": "LACT charge pump A: circle + triangular base; plate below at y2467"},
-    "t0084": {"tag": "PBA-0202",  "bbox": [3665, 2645, 3755, 2715], "note": "LACT charge pump B; plate below at y2738"}
-  }
+  "_note": "Hand-read reference inputs for PX-2368-0180004-001, read off rendered crops with a 200px coordinate grid (2026-07-27/28). These are drawn SYMBOL bodies, not name plates - the distinction R0 exists to make. Used where R0 finds no plausible enclosing path, because this sheet's CAD export groups strokes into region-sized paths.",
+  "_which_variant_produced_the_reported_numbers": "equipment_extents_wide. The 'tight' variant is kept only to document that hand placement is itself a tuning knob - it LOST two real edges (10/12 known-truth vs 11/12 for wide).",
+
+  "equipment_extents_wide": {
+    "t0029": {"tag": "XFMR-0301", "bbox": [2195, 2435, 2315, 2535], "note": "transformer rectangle + its connection stubs"},
+    "t0083": {"tag": "PBA-0201",  "bbox": [3610, 2355, 3800, 2460], "note": "LACT charge pump A: circle + base + suction/discharge nozzles"},
+    "t0084": {"tag": "PBA-0202",  "bbox": [3610, 2630, 3800, 2735], "note": "LACT charge pump B, same form"}
+  },
+
+  "equipment_extents_tight": {
+    "t0029": {"tag": "XFMR-0301", "bbox": [2225, 2458, 2285, 2512]},
+    "t0083": {"tag": "PBA-0201",  "bbox": [3665, 2370, 3755, 2445]},
+    "t0084": {"tag": "PBA-0202",  "bbox": [3665, 2645, 3755, 2715]}
+  },
+
+  "_recovered_entities_note": "Four pump-suction instruments absent from the GPT-5.5-low extraction. They ARE tagged on the drawing, but the loop number sits on a SECOND line inside the bubble, so the PDF text layer exposes only bare 'FSV'/'PSHL' tokens and the extractor never emitted them. Seeds read off a rendered crop; R0 resolves all four to 67-68x68px at confidence 1.00, matching every other ISA bubble on the sheet. SDV-0100F and SDV-0300A remain unrecovered - not present in the text layer at all.",
+  "recovered_instrument_seeds": [
+    {"tag": "FSV-0201A",  "seed": [3529, 2320], "type": "instrument", "host": "PBA-0201"},
+    {"tag": "PSHL-0201B", "seed": [3601, 2320], "type": "instrument", "host": "PBA-0201"},
+    {"tag": "FSV-0202A",  "seed": [3529, 2588], "type": "instrument", "host": "PBA-0202"},
+    {"tag": "PSHL-0202B", "seed": [3623, 2588], "type": "instrument", "host": "PBA-0202"}
+  ],
+
+  "_independent_gt_note": "15 on-sheet connections recorded by the 2026-07-25 hand trace, BEFORE any v2 work, so recall measured against these is not circular. This is a partial reconstruction from a prose summary - the original 26-connection list was never persisted and is lost. Model-traced, not certified human annotation.",
+  "independent_gt_edges": [
+    ["MBD-0100","PSHL-0100"], ["MBD-0100","LSL-0100B"], ["MBD-0100","HAM-0100"],
+    ["MBD-0100","SDV-0100B"], ["MBD-0100","PSV-0100A"], ["MBD-0100","PSV-0100B"],
+    ["HAM-0100","SDV-0100D"], ["NBK-0300","LSL-0300C"], ["NBK-0300","LSHL-0300A"],
+    ["NBK-0300","SDV-0300B"], ["NBK-0300","XFMR-0301"], ["XSY-0301","XFMR-0301"],
+    ["PBA-0201","PBA-0202"], ["MBD-0100","LSHL-0100"], ["MBD-0100","TSH-0100"]
+  ]
 }

@@ -1,0 +1,1156 @@
+<title>Relationship Pipeline — Three Architectures Compared</title>
+<style>
+:root {
+  --paper: #eef1f3;
+  --paper-raised: #f8fafb;
+  --ink: #16232b;
+  --ink-soft: #3f4f57;
+  --ink-muted: #71828a;
+  --line: #c7d2d6;
+  --line-soft: #dde5e8;
+  --accent: #2b6e8f;
+  --accent-ink: #ffffff;
+
+  --det: #3f6ea5;
+  --det-bg: #e4ecf6;
+  --cloud: #b8542f;
+  --cloud-bg: #f7e6dd;
+  --local: #1f8f5f;
+  --local-bg: #dff2e8;
+  --gap: #8a97a0;
+  --gap-bg: #e9edef;
+
+  --pass: #1f8f5f;
+  --pass-bg: #dff2e8;
+  --fail: #ad3f3f;
+  --fail-bg: #f8e2e0;
+  --pending: #8a7a2f;
+  --pending-bg: #f3ecd8;
+
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+:root[data-theme="dark"] {
+  --paper: #0d161c;
+  --paper-raised: #131f27;
+  --ink: #e7eef1;
+  --ink-soft: #b9c8cd;
+  --ink-muted: #7f939b;
+  --line: #263840;
+  --line-soft: #1c2b32;
+  --accent: #6fb6d4;
+  --accent-ink: #06171d;
+
+  --det: #7fb0e8;
+  --det-bg: #17263a;
+  --cloud: #e2925f;
+  --cloud-bg: #33231a;
+  --local: #5ed19a;
+  --local-bg: #123526;
+  --gap: #6b7d85;
+  --gap-bg: #1a262c;
+
+  --pass: #5ed19a;
+  --pass-bg: #123526;
+  --fail: #e2867e;
+  --fail-bg: #3a201d;
+  --pending: #d8c26e;
+  --pending-bg: #33291a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0d161c; --paper-raised: #131f27; --ink: #e7eef1; --ink-soft: #b9c8cd;
+    --ink-muted: #7f939b; --line: #263840; --line-soft: #1c2b32; --accent: #6fb6d4;
+    --accent-ink: #06171d;
+    --det: #7fb0e8; --det-bg: #17263a; --cloud: #e2925f; --cloud-bg: #33231a;
+    --local: #5ed19a; --local-bg: #123526; --gap: #6b7d85; --gap-bg: #1a262c;
+    --pass: #5ed19a; --pass-bg: #123526; --fail: #e2867e; --fail-bg: #3a201d;
+    --pending: #d8c26e; --pending-bg: #33291a;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+  line-height: 1.5; -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1440px; margin: 0 auto; padding: 44px 24px 80px; }
+
+header.page { margin-bottom: 32px; max-width: 78ch; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 10px; font-weight: 600;
+}
+h1 {
+  font-size: clamp(24px, 3.2vw, 32px); margin: 0 0 12px; line-height: 1.18; text-wrap: balance;
+  letter-spacing: -0.01em; font-weight: 700;
+}
+.dek { color: var(--ink-soft); font-size: 15px; margin: 0; }
+
+/* legend */
+.legend {
+  display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 24px 0 32px; padding: 14px 18px;
+  background: var(--paper-raised); border: 1px solid var(--line); border-radius: 10px;
+  font-size: 12.5px; color: var(--ink-soft);
+}
+.legend .item { display: inline-flex; align-items: center; gap: 7px; }
+.legend .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+.legend .sw.gapline { background: none; border: 1.5px dashed var(--gap); }
+
+/* 3-column board */
+.board {
+  display: grid; grid-template-columns: repeat(3, minmax(300px, 1fr)); gap: 20px;
+  overflow-x: auto; padding-bottom: 8px;
+}
+@media (max-width: 980px) { .board { grid-template-columns: 1fr; overflow-x: visible; } }
+
+.col {
+  background: var(--paper-raised); border: 1px solid var(--line); border-radius: 14px;
+  padding: 20px 18px 18px; display: flex; flex-direction: column; min-width: 300px;
+}
+.col-head { margin-bottom: 6px; }
+.col-tag {
+  font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--ink-muted); font-weight: 700; margin-bottom: 5px;
+}
+.col-title { font-size: 17px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.005em; }
+.col-status {
+  display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  margin-bottom: 12px; font-family: var(--font-mono);
+}
+.col-status.live { background: var(--local-bg); color: var(--local); }
+.col-status.shelved { background: var(--gap-bg); color: var(--gap); }
+.col-status.proposed { background: var(--det-bg); color: var(--det); }
+
+.flow { display: flex; flex-direction: column; align-items: stretch; gap: 0; margin-top: 4px; }
+.stage {
+  border-radius: 9px; padding: 11px 13px; border: 1.5px solid; position: relative;
+}
+.stage + .stage { margin-top: 0; }
+.arrow-down {
+  align-self: center; color: var(--ink-muted); font-size: 15px; line-height: 1; margin: 3px 0; font-family: var(--font-mono);
+}
+.stage.det { background: var(--det-bg); border-color: var(--det); }
+.stage.cloud { background: var(--cloud-bg); border-color: var(--cloud); }
+.stage.local { background: var(--local-bg); border-color: var(--local); }
+.stage.gap { background: var(--gap-bg); border-color: var(--gap); border-style: dashed; }
+
+.stage .code {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; opacity: 0.75; display: block; margin-bottom: 3px;
+}
+.stage.det .code { color: var(--det); }
+.stage.cloud .code { color: var(--cloud); }
+.stage.local .code { color: var(--local); }
+.stage.gap .code { color: var(--gap); }
+.stage .name { font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.stage .detail { font-size: 11.5px; color: var(--ink-soft); line-height: 1.4; }
+.stage .model {
+  display: inline-block; margin-top: 6px; font-family: var(--font-mono); font-size: 10.5px;
+  padding: 1px 7px; border-radius: 5px; background: var(--paper-raised); color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+
+.verdict {
+  margin-top: 16px; padding: 13px 14px; border-radius: 9px; background: var(--paper);
+  border: 1px solid var(--line); font-size: 12.5px; color: var(--ink-soft); line-height: 1.5;
+}
+.verdict strong { color: var(--ink); }
+.verdict .metric { font-family: var(--font-mono); color: var(--ink); font-weight: 600; }
+
+/* ── 2026-07-24 addition: Tier-1 upgrade + probe testing section ───────── */
+.session-divider {
+  display: flex; align-items: center; gap: 14px; margin: 56px 0 28px;
+}
+.session-divider .line { flex: 1; height: 1px; background: var(--line); }
+.session-divider .label {
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--accent); font-weight: 700; white-space: nowrap;
+}
+
+.testing-section { margin-bottom: 40px; }
+.testing-section > h2 {
+  font-size: 18px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.005em;
+}
+.testing-section > p.note {
+  color: var(--ink-muted); font-size: 13px; margin: 0 0 16px; max-width: 74ch; line-height: 1.5;
+}
+
+.table-card {
+  background: var(--paper-raised); border: 1px solid var(--line); border-radius: 12px;
+  overflow: hidden; margin-bottom: 18px;
+}
+.table-card .table-head {
+  padding: 13px 18px 11px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.table-card .table-title { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.table-card .table-sub { font-size: 11.5px; color: var(--ink-muted); }
+.table-scroll { overflow-x: auto; }
+table.data {
+  width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px;
+}
+table.data th, table.data td {
+  padding: 10px 18px; text-align: left; border-bottom: 1px solid var(--line-soft); white-space: nowrap;
+}
+table.data thead th {
+  font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--ink-muted); font-weight: 700; border-bottom: 1px solid var(--line);
+}
+table.data tbody tr:last-child td { border-bottom: none; }
+table.data td.num, table.data th.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+table.data td.dim { color: var(--ink-muted); white-space: normal; }
+/* audit table: long prose columns must wrap, and the row label needs room */
+table.data.audit td.row-label { min-width: 210px; max-width: 260px; }
+table.data.audit td.dim { max-width: 420px; }
+table.data.audit td:last-child { white-space: normal; min-width: 96px; }
+table.data td.row-label { font-weight: 600; white-space: normal; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; font-family: var(--font-mono); white-space: nowrap;
+}
+.status-pill.pass { background: var(--pass-bg); color: var(--pass); }
+.status-pill.fail { background: var(--fail-bg); color: var(--fail); }
+.status-pill.pending { background: var(--pending-bg); color: var(--pending); }
+.status-pill.built { background: var(--local-bg); color: var(--local); }
+.status-pill.blocked { background: var(--gap-bg); color: var(--gap); }
+
+.mini-stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 4px 0 18px; }
+.mini-stat {
+  flex: 1; min-width: 170px; background: var(--paper-raised); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 16px;
+}
+.mini-stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted);
+  font-family: var(--font-mono); font-weight: 700; margin-bottom: 6px; }
+.mini-stat .v { font-size: 20px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.mini-stat .v .arrow { color: var(--ink-muted); font-size: 15px; margin: 0 4px; font-weight: 400; }
+.mini-stat .v .delta { color: var(--local); font-size: 13px; font-weight: 600; margin-left: 6px; }
+.mini-stat .v .delta.warn { color: var(--fail); }
+
+
+.callout {
+  margin-top: 16px; padding: 14px 16px; border-radius: 9px; background: var(--paper-raised);
+  border: 1px solid var(--line); font-size: 13px; color: var(--ink-soft); line-height: 1.55;
+}
+.callout h4 {
+  margin: 0 0 6px; font-size: 12.5px; font-weight: 700; color: var(--ink);
+  font-family: var(--font-mono); letter-spacing: 0.03em; text-transform: uppercase;
+}
+.callout p { margin: 0; }
+.callout strong { color: var(--ink); }
+.callout.bad-tone { border-color: var(--fail); background: var(--fail-bg); color: var(--ink); }
+.callout.bad-tone h4 { color: var(--fail); }
+.dim-cell { color: var(--ink-muted); }
+
+</style>
+
+<div class="wrap">
+
+<header class="page">
+  <div class="eyebrow">P&amp;ID Extraction — Relationship Stage · 2026-07-22, updated 2026-07-28</div>
+  <h1>Three architectures for entity relationships, side by side</h1>
+  <p class="dek">What ships today in <code>pnid-extraction-agent</code>, what was actually built (and shelved) in <code>pnid-intelligence-agent</code>, and the proposed stage that ports the working parts of both into one pipeline tied directly to today's entity-extraction output.</p>
+</header>
+
+<div class="legend">
+  <span class="item"><i class="sw" style="background:var(--det)"></i> Deterministic / CV — no model, no cost</span>
+  <span class="item"><i class="sw" style="background:var(--cloud)"></i> Proprietary cloud LLM/VLM</span>
+  <span class="item"><i class="sw" style="background:var(--local)"></i> Local model — fine-tuned adapter</span>
+  <span class="item"><i class="sw gapline"></i> Known gap — not built / not measured</span>
+</div>
+
+<div class="board">
+
+  <!-- COLUMN 1: pnid-extraction-agent -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-tag">Column 1</div>
+      <div class="col-title">pnid-extraction-agent</div>
+      <span class="col-status live">In production, active PRs</span>
+    </div>
+    <div class="flow">
+      <div class="stage cloud">
+        <span class="code">Reasoning</span>
+        <div class="name">ocr_reasoning.py — whole-page tag read</div>
+        <div class="detail">OCR words + full-page image → one call proposes every tag.</div>
+        <span class="model">Claude Sonnet 4.6 / GPT-5.5</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage det">
+        <span class="code">relationships.py</span>
+        <div class="name">ISA loop grouping</div>
+        <div class="detail">Regex on tag text → <code>loop_member</code> edges for tags sharing a loop number. Free, runs at assembly.</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage cloud">
+        <span class="code">hierarchy.py</span>
+        <div class="name">Parent/child hierarchy pass</div>
+        <div class="detail">Overview image + tag list → parent_id/level per tag. Anchored by tag-nesting + loop priors.</div>
+        <span class="model">Claude Sonnet 4.6</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage det">
+        <span class="code">_break_cycles</span>
+        <div class="name">Deterministic cycle-break</div>
+        <div class="detail">Forces the parent graph into a forest. Provably acyclic, no model call.</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage cloud">
+        <span class="code">hierarchy.py</span>
+        <div class="name">Connectivity pass</div>
+        <div class="detail">Same overview image, chunked 140 tags/call → <code>feeds / relieves_to / actuates / signal_to</code>. No geometry — pure vision-language inference from a picture + tag list.</div>
+        <span class="model">Claude Sonnet 4.6</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage gap">
+        <span class="code">Missing</span>
+        <div class="name">No line-tracing. No relation validation. No ground truth.</div>
+        <div class="detail">The <code>edges</code> field for CV line-tracing exists in the schema but is never populated. <code>score.py</code> defines hierarchy-edge scoring — never called.</div>
+      </div>
+    </div>
+    <div class="verdict">
+      <strong>What's actually measured:</strong> tag revR only, <span class="metric">0.82–0.84 F1</span>. Relationships are emitted with zero scoring anywhere in the repo or its fixtures — an ungrounded LLM guess, never checked.
+    </div>
+  </div>
+
+  <!-- COLUMN 2: pnid-intelligence-agent -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-tag">Column 2</div>
+      <div class="col-title">pnid-intelligence-agent</div>
+      <span class="col-status shelved">Shelved (per leadership) — real code exists, PR #711 open since June</span>
+    </div>
+    <div class="flow">
+      <div class="stage cloud">
+        <span class="code">Stage 4</span>
+        <div class="name">Symbol / entity detection</div>
+        <div class="detail">VLM produces DetectionRecord: entity_type + value + provenance.bbox.</div>
+        <span class="model">GPT-5.5 / Qwen (v3 slot)</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage det">
+        <span class="code">Stage 6</span>
+        <div class="name">Line tracing — vector-first, raster fallback</div>
+        <div class="detail">Vector: extract PDF line segments directly, planar-node, union-find, resolve to entity ids. Raster CV fallback for scans. <strong>Measured: asset↔asset reachability 4 → 91 relations, zero LLM.</strong></div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage cloud">
+        <span class="code">Stage 10.5</span>
+        <div class="name">Skid grouping</div>
+        <div class="detail">Per-asset ROI crop → which entities belong to this asset's skid.</div>
+        <span class="model">Claude Opus 4.7</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage det">
+        <span class="code">Stage 11</span>
+        <div class="name">Graph construction + ISA precision rules</div>
+        <div class="detail">Ontology-typed edges from the line graph. Hop/distance caps (91→20, spurious transitive links removed). Valve-operator ISA rule killed 20/20 measured false positives.</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage local">
+        <span class="code">Stage 13</span>
+        <div class="name">Entity validation</div>
+        <div class="detail">Annotated overview + entity list + OCR → keep/correct/remove, before relations are trusted.</div>
+        <span class="model">Sonnet 4.6 → our v3-stage13 adapter</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage local">
+        <span class="code">Stage 12</span>
+        <div class="name">Relation validation — confidence-gated</div>
+        <div class="detail">Only edges &lt;0.75 confidence get a call: 3-crop bundle (source/target/context) → confirm/reject/relabel.</div>
+        <span class="model">Opus 4.8 → our v3-relation adapter</span>
+      </div>
+    </div>
+    <div class="verdict">
+      <strong>What's actually measured:</strong> entity validation <span class="metric">89.2%</span> (v3 vs GPT-5.5-low's 66.7%); relation validation <span class="metric">89.2%</span> (v3, partial epochs, vs 72.5%). Line-typing (process vs. utility) proven infeasible on flattened CAD strokes — the one open gap, stated explicitly by its own authors: <em>"the process-backbone pass is NOT yet built."</em>
+    </div>
+  </div>
+
+  <!-- COLUMN 3: proposed -->
+  <div class="col" style="border-color: var(--accent); border-width: 1.5px;">
+    <div class="col-head">
+      <div class="col-tag">Column 3</div>
+      <div class="col-title">Proposed relationship stage</div>
+      <span class="col-status proposed">Ports the working parts of both — tied directly to today's entity output</span>
+    </div>
+    <div class="flow">
+      <div class="stage local">
+        <span class="code">Entity stage</span>
+        <div class="name">Already built &amp; benchmarked today</div>
+        <div class="detail">4-arm union (regex, whole-page, Molmo2+v1, CV-hybrid) → Qwen crop reads.</div>
+        <span class="model">Molmo2-O-7B + v1 · Qwen3-VL-8B</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage det">
+        <span class="code">R1</span>
+        <div class="name">Line-graph construction</div>
+        <div class="detail">Ported from intelligence-agent Stage 6 as-is: vector fast-path, raster CV fallback.</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage det">
+        <span class="code">R2a</span>
+        <div class="name">Deterministic relation builder — connectivity</div>
+        <div class="detail">Stage 11's ontology edges + hop/distance caps + ISA valve-operator rule, plus extraction-agent's free loop-grouping. <strong>Backbone pass built &amp; validated 2026-07-24 — see below.</strong></div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage det">
+        <span class="code">R2b</span>
+        <div class="name">Deterministic relation builder — hierarchy</div>
+        <div class="detail">Containment/nesting from R1's geometry (bbox overlap/proximity) first, LLM only for ambiguous cases. Same cycle-break guarantee ported verbatim — zero reason to rebuild what already works.</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage local">
+        <span class="code">R3</span>
+        <div class="name">Entity validation</div>
+        <div class="detail">Runs AFTER the graph is built, BEFORE relations are trusted — a removed entity cascades to drop every relation touching it. Reuses the existing adapter directly.</div>
+        <span class="model">Qwen3-VL-8B + v3-stage13</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage local">
+        <span class="code">R4</span>
+        <div class="name">Relation validation — confidence-gated</div>
+        <div class="detail">Only low-confidence edges get a call: 3-crop bundle (source/target/context), zoomed in — not the whole page. Same gate design as Stage 12. <strong>Tested 2026-07-24 as a standalone hybrid verifier — see below: fails on any model available locally today.</strong></div>
+        <span class="model">Qwen3-VL-8B + v3-relation</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage cloud">
+        <span class="code">R5</span>
+        <div class="name">Semantic enrichment — geometry-grounded</div>
+        <div class="detail">Keeps extraction-agent's connectivity-kind labeling, but fed R1's traced graph as evidence — labels proven edges instead of inventing topology.</div>
+        <span class="model">Qwen3-VL-8B</span>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="stage det">
+        <span class="code">Upgrade #1</span>
+        <div class="name">Process-backbone pass — built &amp; validated 2026-07-24</div>
+        <div class="detail">Walks the line graph through inline valves/instruments so vessel→vessel actually fires. Corpus-checked against 762 real sheets first, then measured: F1 <strong>0.104 → 0.156</strong> on the self-test sheet. Detail below.</div>
+      </div>
+    </div>
+    <div class="verdict">
+      <strong>Benchmark plan:</strong> PID2Graph edge <span class="metric">precision / recall / F1</span> on held-out real sheets (512 available, un-touched by v1/v3 training) — the ground truth neither production repo currently has. R1+R2a/b alone = zero-model floor; full stack = target number.
+    </div>
+  </div>
+
+</div>
+
+<div class="session-divider">
+  <span class="line"></span>
+  <span class="label">2026-07-24 — hybrid verifier probes &amp; Tier 1 upgrade testing</span>
+  <span class="line"></span>
+</div>
+
+<section class="testing-section">
+  <h2>Go/no-go probes for the R4 hybrid-verifier idea</h2>
+  <p class="note">Before building R4 as a standalone verifier stage, three targeted tests checked whether the idea's load-bearing assumption holds on real AG/RIVE sheets — not the PID2Graph crops the original ~80–84% reference figures came from.</p>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Probe results</span>
+      <span class="table-sub">80% pass bar throughout</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr><th>Probe</th><th>What it tested</th><th>Result</th><th>Verdict</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Probe 1</td>
+            <td>Symbol-extent reconstruction from vector geometry</td>
+            <td class="dim-cell">Validated, incl. branching case</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Probe 2</td>
+            <td>Qwen bounded connectivity verification, 19 real crops</td>
+            <td class="num">52.6%</td>
+            <td><span class="status-pill fail">FAIL</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Probe 3</td>
+            <td>Qwen reading off-page connector text, 8 real crops</td>
+            <td class="num">87.5% (7/8)</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Hybrid verifier accuracy across every variant tested</span>
+      <span class="table-sub">Same 19 real crop pairs throughout</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr><th>Test variant</th><th class="num">Qwen3-VL-8B (base)</th><th class="num">Qwen3-VL-8B + v3-relation</th><th class="num">GPT-5.5-low</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Forced short YES/NO, original boxes</td>
+            <td class="num">52.6% <span class="dim-cell">(constant "NO")</span></td>
+            <td class="num dim-cell">—</td>
+            <td class="num">68.4%</td>
+          </tr>
+          <tr>
+            <td class="row-label">Chain-of-thought (truncated, 200 tok)</td>
+            <td class="num dim-cell">discarded — truncation</td>
+            <td class="num dim-cell">—</td>
+            <td class="num dim-cell">—</td>
+          </tr>
+          <tr>
+            <td class="row-label">Chain-of-thought v2 (fixed tokens, endpoint check)</td>
+            <td class="num">52.9% <span class="dim-cell">(n=17)</span></td>
+            <td class="num dim-cell">—</td>
+            <td class="num">73.7%</td>
+          </tr>
+          <tr>
+            <td class="row-label">Adapter's own trained prompt format</td>
+            <td class="num dim-cell">—</td>
+            <td class="num">52.6% <span class="dim-cell">(degenerate "No.")</span></td>
+            <td class="num dim-cell">—</td>
+          </tr>
+          <tr>
+            <td class="row-label">Chain-of-thought (wrong format for adapter)</td>
+            <td class="num dim-cell">—</td>
+            <td class="num">0% <span class="dim-cell">(degenerate)</span></td>
+            <td class="num dim-cell">—</td>
+          </tr>
+          <tr>
+            <td class="row-label">Corrected boxes (real symbol, not tag text) — short prompt</td>
+            <td class="num dim-cell">—</td>
+            <td class="num dim-cell">—</td>
+            <td class="num">77.8%</td>
+          </tr>
+          <tr>
+            <td class="row-label">Corrected boxes — chain-of-thought v2</td>
+            <td class="num dim-cell">—</td>
+            <td class="num dim-cell">—</td>
+            <td class="num" style="color:var(--pass); font-weight:700;">83.3% <span class="status-pill pass" style="margin-left:6px;">clears bar</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <strong>Reading this:</strong> Qwen never breaks chance level (~53%) under any prompt or fine-tuning variant. GPT-5.5-low starts below bar (68.4–73.7%) but clears it once the test's own box-placement bug — boxes drawn on tag text instead of the real drawn symbol — is fixed (83.3%). No model available locally today clears the bar under any condition tested.
+  </div>
+</section>
+
+<section class="testing-section">
+  <h2>Tier 1 — deterministic upgrades to Pipeline 3 (R1/R2a)</h2>
+  <p class="note">Four upgrades proposed off the probe findings and yesterday's agreement-diff work — model-free, aimed directly at Pipeline 3's measured weak strata.</p>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Build &amp; test status</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr><th class="num">#</th><th>Upgrade</th><th>Status</th><th>Test type</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">1</td>
+            <td class="row-label">Off-page claim partitioning</td>
+            <td><span class="status-pill built">BUILT</span></td>
+            <td class="dim-cell">Self-test (synthetic data): pass</td>
+          </tr>
+          <tr>
+            <td class="num">2</td>
+            <td class="row-label">Process-backbone pass (walk through inline valves/instruments)</td>
+            <td><span class="status-pill built">BUILT</span></td>
+            <td class="dim-cell">Corpus validation (762 real sheets) + real single-sheet benchmark</td>
+          </tr>
+          <tr>
+            <td class="num">3</td>
+            <td class="row-label">Symbol-extent resolution (box on real shape, not tag text)</td>
+            <td><span class="status-pill blocked">BLOCKED</span></td>
+            <td class="dim-cell">No reliable signal found to distinguish shape / pipe / text in the PDF</td>
+          </tr>
+          <tr>
+            <td class="num">4</td>
+            <td class="row-label">Line-label endpoint filtering</td>
+            <td><span class="status-pill built">BUILT</span></td>
+            <td class="dim-cell">Self-test (synthetic data): pass</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Upgrade #2 — corpus validation before trusting it</span>
+      <span class="table-sub">762 real PID2Graph sheets — does "walk through one fitting" invent fake connections?</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr><th>Fitting walked through</th><th class="num">Candidate pairs</th><th class="num">Already a real GT edge</th><th class="num">Would be a new false positive</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="row-label">Valve</td><td class="num">324,495</td><td class="num" style="color:var(--pass)">84.6%</td><td class="num" style="color:var(--fail)">15.4%</td></tr>
+          <tr><td class="row-label">Instrumentation</td><td class="num">141,733</td><td class="num" style="color:var(--pass)">84.8%</td><td class="num" style="color:var(--fail)">15.2%</td></tr>
+          <tr><td class="row-label">Pump</td><td class="num">1,526</td><td class="num" style="color:var(--pass)">74.7%</td><td class="num" style="color:var(--fail)">25.3%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Upgrade #2 — real before/after benchmark</span>
+      <span class="table-sub">Self-test sheet OPEN100/0, R1+R2a</span>
+    </div>
+    <div class="mini-stats" style="padding: 16px 18px 0;">
+      <div class="mini-stat">
+        <div class="k">Overall F1</div>
+        <div class="v">0.104 <span class="arrow">→</span> 0.156 <span class="delta">+50%</span></div>
+      </div>
+      <div class="mini-stat">
+        <div class="k">Precision</div>
+        <div class="v">0.385 <span class="arrow">→</span> 0.375 <span class="delta warn">−3%</span></div>
+      </div>
+      <div class="mini-stat">
+        <div class="k">Recall</div>
+        <div class="v">0.060 <span class="arrow">→</span> 0.099 <span class="delta">+65%</span></div>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table class="data" style="margin-top:6px;">
+        <thead>
+          <tr><th>Metric</th><th class="num">Before</th><th class="num">After</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="row-label">True positives</td><td class="num">20</td><td class="num">33</td></tr>
+          <tr><td class="row-label">False positives</td><td class="num">32</td><td class="num">55</td></tr>
+          <tr><td class="row-label">valve | valve F1</td><td class="num">0.168</td><td class="num" style="color:var(--pass)">0.239</td></tr>
+          <tr><td class="row-label">instrumentation | valve F1</td><td class="num">0.096</td><td class="num" style="color:var(--pass)">0.169</td></tr>
+          <tr><td class="row-label">general | general F1</td><td class="num">0.000</td><td class="num dim-cell">0.000 <span class="dim-cell">— separate raster-tracing bottleneck on this sheet</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Real-sheet re-extraction — for testing upgrades #1 and #4</span>
+      <span class="table-sub">Fresh GPT-5.5-low run, 2026-07-24 — original run's data was never saved to disk</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr><th>Sheet</th><th class="num">Tags</th><th class="num">Relationships</th><th class="num">Cost</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="row-label">PX-2368-0180004-001</td><td class="num">104</td><td class="num">113</td><td class="num">$0.4278</td><td><span class="status-pill built">DONE</span></td></tr>
+          <tr><td class="row-label">GD-B-540-DP-2920-005-Z</td><td class="num">107</td><td class="num">146</td><td class="num">$0.2789</td><td><span class="status-pill built">DONE</span></td></tr>
+          <tr><td class="row-label">PX-2365-0140006-001</td><td class="num dim-cell">—</td><td class="num dim-cell">—</td><td class="num dim-cell">—</td><td><span class="status-pill pending">PENDING</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <strong>Where this stood (2026-07-24):</strong> the process-backbone pass was the one upgrade with a real before/after number, on a single self-test sheet. All three buildable upgrades have since been run end-to-end on the 3 real sheets and multi-sheet PID2Graph — <strong>see the 2026-07-25 verification below</strong>. Symbol-extent resolution stays blocked — no reliable PDF-level signal distinguishes a drawn shape from a pipe from a text glyph.
+  </div>
+</section>
+
+<div class="session-divider">
+  <span class="line"></span>
+  <span class="label">2026-07-25 — full run on 3 real sheets + Opus recall verification</span>
+  <span class="line"></span>
+</div>
+
+<section class="testing-section">
+  <h2>The LLM relation-validator (R4) in the loop</h2>
+  <p class="note">Given entities (coords + tags) fed to the full relationship pipeline on the 3 real sheets, both configs, then the local Qwen3-VL-8B + v3-relation adapter validates each candidate edge (keep/reject). Captured pre- and post-validation so the deterministic result stands alone if R4 hurts.</p>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Pre- vs post-LLM edge counts — the 2×2</span>
+      <span class="table-sub">smoke gate, 8 candidates/sheet validated</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr><th>Sheet</th><th class="num">original pre</th><th class="num">original post</th><th class="num">upgraded pre</th><th class="num">upgraded post</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="row-label">PX-2368-0180004-001</td><td class="num">78</td><td class="num" style="color:var(--fail)">0</td><td class="num">52</td><td class="num" style="color:var(--fail)">0</td></tr>
+          <tr><td class="row-label">GD-B-540-DP-2920-005-Z</td><td class="num">140</td><td class="num" style="color:var(--fail)">0</td><td class="num">201</td><td class="num" style="color:var(--fail)">0</td></tr>
+          <tr><td class="row-label">PX-2365-0140006-001</td><td class="num">106</td><td class="num" style="color:var(--fail)">0</td><td class="num">150</td><td class="num" style="color:var(--fail)">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout bad-tone">
+    <h4>R4-local is degenerate in-pipeline — confirms Probe 2</h4>
+    <p>Qwen's validator answered <strong>"No" to every candidate it saw (kept 0/8 per sheet)</strong> — the same degenerate collapse Probe 2 found. Both post columns go to zero: the validator doesn't filter, it deletes. <strong>The pre-LLM deterministic result is therefore the benchmark</strong>, exactly the fallback this pre/post split was built for.</p>
+  </div>
+</section>
+
+<section class="testing-section">
+  <h2>Opus recall verification — PX-2368, hand-traced ground truth</h2>
+  <p class="note">The 3 main equipment clusters (MBD-0100 surge vessel, NBK-0300 treater + XFMR-0301, PBA-0201/0202 pumps) traced by eye from the drawing → 26 real on-sheet connections, checked against what the deterministic pipeline found.</p>
+
+  <div class="mini-stats">
+    <div class="mini-stat">
+      <div class="k">Recall — strict</div>
+      <div class="v">58% <span class="delta" style="color:var(--ink-muted)">15 / 26</span></div>
+    </div>
+    <div class="mini-stat">
+      <div class="k">Recall — crediting near-misses</div>
+      <div class="v">77% <span class="delta" style="color:var(--ink-muted)">20 / 26</span></div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">26 real on-sheet connections vs pipeline</span>
+      <span class="table-sub">recall identical in both configs</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr><th>Outcome</th><th class="num">count</th><th>examples</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label"><span class="status-pill pass">FOUND CLEANLY</span></td>
+            <td class="num">15</td>
+            <td class="dim">MBD-0100↔PSHL/LSL/HAM/SDV-0100B/both PSVs; HAM↔SDV-0100D; NBK↔LSL/LSHL/SDV-0300B/XFMR; XSY↔XFMR; PBA-0201↔PBA-0202</td>
+          </tr>
+          <tr>
+            <td class="row-label"><span class="status-pill pending">WRONG ENDPOINT</span></td>
+            <td class="num">5</td>
+            <td class="dim">LSHL-0100A &amp; TSH-0100A bound to HAM not the vessel; PSV-0300A, FSV-0300C, PSV-0300C bound to XFMR/pumps not the treater</td>
+          </tr>
+          <tr>
+            <td class="row-label"><span class="status-pill fail">MISSED</span></td>
+            <td class="num">6</td>
+            <td class="dim">SDV-0100F, SDV-0300A, and all 4 pump-suction instruments (FSV/PSHL on both LACT pumps)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Delta adjudication — what the upgrades actually changed (PX-2368)</span>
+      <span class="table-sub">every backbone-added edge + sampled line-removed, judged against the drawing</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr><th>Upgrade effect</th><th>verdict</th><th>finding</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Backbone-added edges (#2)</td>
+            <td><span class="status-pill fail">0–1 of 5 correct</span></td>
+            <td class="dim">4 of 5 falsely link two <em>separate</em> off-page connector labels stacked on the border (MBF-0623↔HBG-0905, PBA-0501↔PBA-0903, MBF-0500↔PBM-0450/0451)</td>
+          </tr>
+          <tr>
+            <td class="row-label">Line-removed edges (#4)</td>
+            <td><span class="status-pill pass">correctly spurious</span></td>
+            <td class="dim">dropped junk like 2"-245-PSIG↔2"-245-PSIG (two pipe labels) and HAM-0100↔6"-245-PSIG (equipment↔a pipe label) — real precision cleanup</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4>Bottom line</h4>
+    <p><strong>The deterministic pipeline recovers ~58–77% of the real on-sheet connections</strong> — and the Tier-1 upgrades leave that recall <strong>unchanged</strong> (the 6 misses are missed in both configs), because the upgrades move <em>false positives</em>, not real-connection recall: the backbone pass trades away precision by inventing off-page links, the line-filter buys some back by removing pipe-label junk. The local Qwen R4 validator can't help — it rejects everything. The biggest recall gap is a specific, fixable cluster: the 4 pump-suction instruments.</p>
+    <p style="margin-top:8px;"><em>Caveat:</em> this ground truth is Opus-traced (a third-signal reference, not certified human GT), scoped to the 3 main equipment clusters, with off-page connections excluded — no single-sheet tracer can reach those (gap #22).</p>
+  </div>
+</section>
+
+<div class="session-divider">
+  <span class="line"></span>
+  <span class="label">2026-07-27 — Pipeline 3 v2 &amp; the first measured precision</span>
+  <span class="line"></span>
+</div>
+
+<section class="testing-section">
+  <h2>Precision, measured for the first time</h2>
+  <p class="note">Every number above this divider was a <em>recall</em> number. Precision — of everything the pipeline claims, how much is real — had never been measured on a real sheet, which <code>CLAUDE.md</code> rule 6 exists specifically to forbid ("never recall alone"). All <strong>42 claims</strong> Pipeline 3 v2 produced on PX-2368-0180004-001 have now been adjudicated one by one against the drawing.</p>
+
+  <div class="mini-stats">
+    <div class="mini-stat">
+      <div class="k">Precision — excl. unsure</div>
+      <div class="v">82.1%</div>
+    </div>
+    <div class="mini-stat">
+      <div class="k">Boundary edges</div>
+      <div class="v" style="color:var(--pass)">100%</div>
+    </div>
+    <div class="mini-stat">
+      <div class="k">On-sheet edges</div>
+      <div class="v">69.6%</div>
+    </div>
+    <div class="mini-stat">
+      <div class="k">Recall — independent GT</div>
+      <div class="v">80.0%</div>
+    </div>
+    <div class="mini-stat">
+      <div class="k">F1</div>
+      <div class="v">&asymp; 0.81</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Accuracy — PX-2368-0180004-001, Pipeline 3 v2</span>
+      <span class="table-sub">42 claims, 100% adjudicated</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead><tr><th>Metric</th><th class="num">Value</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">Precision (excl. unsure)</td><td class="num"><strong>82.1%</strong></td></tr>
+          <tr><td class="row-label">&mdash; boundary edges</td><td class="num" style="color:var(--pass)"><strong>100%</strong></td></tr>
+          <tr><td class="row-label">&mdash; on-sheet edges</td><td class="num">69.6%</td></tr>
+          <tr><td class="row-label">Recall (independent GT)</td><td class="num">80.0%</td></tr>
+          <tr><td class="row-label">F1</td><td class="num"><strong>&asymp; 0.81</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4>Boundary edges: 16 of 16 correct</h4>
+    <p>The off-page half of gap #22 — previously declared structurally unverifiable, and reading <strong>0 edges</strong> before v2 — is now the strongest part of the pipeline. Ports are located at the <strong>pentagon enclosing each sheet-number token</strong> (15/15 resolved, confidence 1.00, consistently 203&times;42px), after two earlier hypotheses were tested and refuted.</p>
+    <p style="margin-top:8px;">Verification was only possible because each claim was rendered with the pipeline's <strong>own traced route overlaid</strong>, turning "trace this by eye across 3000px" into "does this highlighted path follow real pipe?". One case independently reproduces the 2026-07-23 Fable adjudication verbatim: <code>MBD-4150 &rarr; MBD-0100</code> visibly merging into the vessel's <code>18"-245 PSIG</code> inlet header, exactly as that report described before this code existed.</p>
+  </div>
+
+  <div class="table-card" style="margin-top:18px;">
+    <div class="table-head">
+      <span class="table-title">The 7 false positives are one dominant defect, not seven scattered ones</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead><tr><th>Failure class</th><th class="num">count</th><th>examples</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Sibling / transitive child-device pairs</td>
+            <td class="num" style="color:var(--fail)"><strong>5</strong></td>
+            <td class="dim">two child devices related to <em>each other</em> rather than only to their shared host: <code>LSHL-0100&harr;TSH-0100</code>, <code>PSHL-0100&harr;LSL-0100B</code>, <code>PSV-0100B&harr;PSHL-0100</code>, <code>PSV-0100B&harr;LSL-0100B</code>, <code>FSV-0201A&harr;PSHL-0202B</code> (crosses pump A to pump B)</td>
+          </tr>
+          <tr>
+            <td class="row-label">Wrong host</td>
+            <td class="num">1</td>
+            <td class="dim"><code>FSV-0202A&harr;PBA-0201</code> — pump B's instrument bound to pump A. Caught automatically by the ISA tag-series check</td>
+          </tr>
+          <tr>
+            <td class="row-label">Device related to its own label</td>
+            <td class="num">1</td>
+            <td class="dim"><code>PSV-0300C&harr;PSV-0300C</code> — a text callout record and a bubble record for one physical device both entered the node set</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="verdict" style="border-color:var(--pass);">
+    <strong>One class fix takes precision from 82.1% to 94.1%.</strong> Five of the seven false positives are the same defect: two child devices (instrument / valve / safety_device) related to each other because they share a host or a header. The fix is a natural extension of the single-host rule already in the code — <em>if both endpoints are child-type and they share a host, suppress the edge</em>. No threshold, no tuning, same reasoning that already removed the <code>LSHL/TSH &rarr; HAM-0100</code> wrong-endpoint errors. Removing that class alone gives <span class="metric">32/34 = 94.1%</span> precision, and would leave only the wrong-host case (already flagged automatically) and the duplicate-record case.
+  </div>
+
+  <div class="table-card" style="margin-top:18px;">
+    <div class="table-head">
+      <span class="table-title">Every upgrade attempted on Pipeline 3 &mdash; and whether it actually passed its own test</span>
+      <span class="table-sub">verdicts are from measured runs, not intent</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data audit">
+        <thead>
+          <tr><th>Upgrade</th><th>What it was tested against</th><th>Result</th><th>Verdict</th></tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4" style="background:var(--paper);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);font-weight:700;">Tier 1 &mdash; deterministic upgrades (2026-07-24/25)</td></tr>
+          <tr>
+            <td class="row-label">#1 Off-page claim partitioning</td>
+            <td class="dim">Self-test on synthetic data; made silent data-loss visible</td>
+            <td class="dim">Works, but only surfaced the problem &mdash; didn't solve it</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">#2 Process-backbone pass</td>
+            <td class="dim">762-sheet corpus check, then 12-sheet OPEN100, then real-sheet adjudication</td>
+            <td class="dim">Corpus predicted 84.6&ndash;84.8% valid; multi-sheet F1 moved only 0.214&rarr;0.225; on a real drawing <strong>0&ndash;1 of 5 added edges correct</strong> (4/5 linked two separate border doorways)</td>
+            <td><span class="status-pill fail">FAIL</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">#3 Symbol-extent resolution</td>
+            <td class="dim">PDF vector geometry, unseeded</td>
+            <td class="dim"><code>closePath</code> false on all 5,608 paths; no signal separates outline / pipe / text stroke</td>
+            <td><span class="status-pill blocked">BLOCKED</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">#4 Line-label endpoint filtering</td>
+            <td class="dim">Real-sheet adjudication of removed edges</td>
+            <td class="dim">Removals were correctly spurious (pipe-label junk). Superseded in v2: labels never enter the node set, so this became a defensive assert</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+
+          <tr><td colspan="4" style="background:var(--paper);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);font-weight:700;">v2 &mdash; entity contract &amp; extents (2026-07-27)</td></tr>
+          <tr>
+            <td class="row-label">Symbol / Port / Label contract</td>
+            <td class="dim">Stripped every tag name and port reference, re-ran</td>
+            <td class="dim"><strong>Byte-identical output</strong> &mdash; 0 edges differed either way. Topology genuinely independent of tag names</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">R0 seeded extent resolution</td>
+            <td class="dim">All 3 AG/RIVE dev sheets</td>
+            <td class="dim">PX-2368 <strong>86%</strong>, GD-B-540 <strong>19%</strong>, PX-2365 <strong>43%</strong>. Dominant failure is the size filter rejecting region-sized CAD paths &mdash; a better seed cannot fix it</td>
+            <td><span class="status-pill pending">PASS on dev sheet, FAILS to generalise</span></td>
+          </tr>
+          <tr>
+            <td class="row-label"><code>given_bbox</code> fallback (was: radius circle)</td>
+            <td class="dim">PX-2368 extent-source counts</td>
+            <td class="dim">Eliminated <code>radius_fallback</code> entirely; a measured box always beats an invented circle</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Hand-placed equipment extents</td>
+            <td class="dim">3 boxes on PX-2368, 3 tightness variants, 12-check set</td>
+            <td class="dim">Tight boxes <strong>lost 2 real edges</strong> (10/12); wider boxes restored them (11/12). Hand placement is itself a tuning knob</td>
+            <td><span class="status-pill pending">PARTIAL</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Schedule filter on all four margins</td>
+            <td class="dim">PX-2368 &mdash; rendered and inspected the top band</td>
+            <td class="dim">Found a horizontal specification table with no symbols in it; 6 entries filtered. One survivor had resolved a <em>spurious extent off a table-cell border</em> &mdash; a false success removed from the node set</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+
+          <tr><td colspan="4" style="background:var(--paper);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);font-weight:700;">v2 &mdash; port / boundary detection</td></tr>
+          <tr>
+            <td class="row-label">Ports located at their annotation text</td>
+            <td class="dim">Boundary edge count on PX-2368</td>
+            <td class="dim"><strong>1 boundary edge from 22 candidates</strong> &mdash; pipes terminate at the connector graphic, not the text</td>
+            <td><span class="status-pill fail">FAIL</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Hypothesis 1: graphic encloses the equipment text</td>
+            <td class="dim">Seeded extent resolution from 14 equipment-name tokens</td>
+            <td class="dim"><strong>11 of 14 returned <code>radius_fallback</code> at confidence 0.00</strong> &mdash; no enclosing path exists; the text has no box around it</td>
+            <td><span class="status-pill fail">FAIL</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Hypothesis 2: snap ports to nearest loose pipe end</td>
+            <td class="dim">Appeared to pass 22/22 within 0.2in &mdash; then re-tested unconfounded</td>
+            <td class="dim"><strong>Measurement was circular</strong> (the graph included the port text boxes, and the tracer masks symbol boxes, so it measured each box against its own mask). Unconfounded: median 183px, only 8/22 within 108px. Enabling it took boundary <strong>1&rarr;0</strong></td>
+            <td><span class="status-pill fail">FAIL &mdash; evidence retracted</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Hypothesis 3: pentagon enclosing the sheet-number token</td>
+            <td class="dim">Rendered the border region and looked at it, then seeded from sheet-ref tokens</td>
+            <td class="dim"><strong>15 of 15 enclosed, every one at confidence 1.00</strong>, 14/15 resolving to a consistent 203&times;42px pentagon. 0 unpaired with their equipment text</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Border candidate = on-sheet duplicate &rarr; not a doorway</td>
+            <td class="dim">All 22 border candidates vs on-sheet symbol names</td>
+            <td class="dim">Exactly 3 duplicated an on-sheet symbol, and those same 3 were the 3 farthest from any pipe end. Clean separation, no overlap</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Boundary edges exempt from the distance cap</td>
+            <td class="dim">Boundary count before/after</td>
+            <td class="dim">The cap was silently deleting <strong>13</strong> boundary edges. Boundary went <strong>0&rarr;7</strong></td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Separate hop cap for boundary paths (16 vs 8)</td>
+            <td class="dim">Per-pentagon reachability diagnostic</td>
+            <td class="dim">All 15 pentagons <em>were</em> reachable but needed 2&ndash;14 hops; the inherited cap of 8 discarded 8 of them</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Nearest-symbol-only per doorway</td>
+            <td class="dim">Doorway connection counts at several hop caps</td>
+            <td class="dim">Needed a correction: first cut left only 7/15 connected because 7 pentagons' shortest path landed on <em>another pentagon</em>. Counting only paths to real symbols &rarr; <strong>15/15</strong></td>
+            <td><span class="status-pill pass">PASS after fix</span></td>
+          </tr>
+
+          <tr><td colspan="4" style="background:var(--paper);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);font-weight:700;">v2 &mdash; graph rules</td></tr>
+          <tr>
+            <td class="row-label">Ports terminal (never walked through)</td>
+            <td class="dim">Invariant check + border-column false-edge count</td>
+            <td class="dim">Removes the backbone pass's worst failure by construction. Traversal-only enforcement was insufficient &mdash; passes 0/1 still emitted <strong>12 port&harr;port edges</strong>, so suppression moved to emit time</td>
+            <td><span class="status-pill pass">PASS after fix</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Single-host precedence for child devices</td>
+            <td class="dim">The 2 known wrong-endpoint edges, then the pump cluster</td>
+            <td class="dim">Removed both <code>&rarr;HAM-0100</code> errors while keeping the correct vessel edges. But it <strong>amplified a tracing error</strong>: a spurious direct edge to the wrong pump blocked the correct traversal edge</td>
+            <td><span class="status-pill pending">PARTIAL</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Distance cap (restoring Stage 11's missing half)</td>
+            <td class="dim">Swept 0.75in / 2in / 6in / disabled</td>
+            <td class="dim">Known-truth <strong>11/12 at every setting including disabled</strong> &mdash; no measured benefit &mdash; while dropping <strong>229 edges</strong> on PX-2365. Also did not cause the failure it was hypothesised to cause</td>
+            <td><span class="status-pill fail">FAIL &mdash; candidate for removal</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Single-fitting-hop cap on the backbone pass</td>
+            <td class="dim">&mdash;</td>
+            <td class="dim">Never fired measurably on the two other sheets, so its effect was never isolated</td>
+            <td><span class="status-pill blocked">NOT TESTED</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">ISA tag-series cross-check</td>
+            <td class="dim">All claimed edges on PX-2368</td>
+            <td class="dim">Naive version raised 5 flags, <strong>2 of them known-real</strong> connections. Restricted to child-device&rarr;equipment: <strong>1 flag, 1 real error, 0 false alarms</strong></td>
+            <td><span class="status-pill pass">PASS after fix</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Page-size transposition fix</td>
+            <td class="dim">Pixmap dimensions vs the computed page size</td>
+            <td class="dim">Real bug (<code>page.rect</code> was being re-rotated) but latent &mdash; the only consumer reads <code>max(w,h)</code>, which is transposition-invariant</td>
+            <td><span class="status-pill pass">PASS (correctness only)</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Phase 0 regression gate</td>
+            <td class="dim">Legacy pipeline re-run after every change</td>
+            <td class="dim">Returned <strong>exactly 78 and 52</strong> candidates throughout, matching the recorded pre-v2 numbers</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+
+          <tr><td colspan="4" style="background:var(--paper);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);font-weight:700;">Identified but not yet built</td></tr>
+          <tr>
+            <td class="row-label">Child&harr;child suppression</td>
+            <td class="dim">Root cause of 5 of the 7 on-sheet false positives</td>
+            <td class="dim">Built 2026-07-28. First attempt keyed on shared host &mdash; backwards, caught only 4 of 7. Rewritten to require Pass 0 in-series evidence</td>
+            <td><span class="status-pill pass">PASS after rewrite</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Inline-symbol association</td>
+            <td class="dim">Root cause of the recall ceiling</td>
+            <td class="dim"><code>passes_through_symbols</code> is populated on <strong>0 of 8,105 segments</strong>, so the builder's inline-chain pass has been dead code. <strong>13 of 38 symbols are in no relation at all</strong> &mdash; 8 valves, 4 safety devices &mdash; and 12 of 12 checked have traced pipe running straight through them</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Duplicate-record dedupe (callout text vs bubble)</td>
+            <td class="dim">1 of the 7 on-sheet false positives</td>
+            <td class="dim">4 PSVs carry both a text-callout record (153&times;31) and a bubble record (68&times;68); shape signature is unambiguous. Built 2026-07-28</td>
+            <td><span class="status-pill pass">PASS</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4>Read these numbers with four caveats</h4>
+    <p><strong>Self-adjudicated.</strong> The verdicts were made by the same party that wrote the pipeline — a strong third-signal opinion, not certified ground truth (register gap #3+5). Per-claim verdicts and reasoning are saved for spot-checking.</p>
+    <p style="margin-top:8px;"><strong>One sheet, hand-assisted.</strong> 3 equipment extents were hand-placed and 4 missing entities hand-recovered. And hand placement is itself a tuning knob — the first, tighter boxes <em>lost</em> two real edges before a wider set restored them.</p>
+    <p style="margin-top:8px;"><strong>Recall rests on a smaller base than precision.</strong> 15 edges across 3 clusters, and the original 26-connection trace was never persisted — so it is a partial reconstruction, unlike the precision figure which covers every claim.</p>
+    <p style="margin-top:8px;"><strong>v2 is not yet shown to generalise.</strong> On the two other dev sheets, R0's extent resolution drops to 19% and 43% and port detection fails entirely on the sheet whose CAD export outlines its text (1 embedded word). The architecture is tag-name-independent — verified by stripping every tag and getting byte-identical output — but it depends on real symbol locations, which is Molmo2's job and not yet wired in.</p>
+  </div>
+</section>
+
+<div class="session-divider">
+  <span class="line"></span>
+  <span class="label">2026-07-28 — final: last three fixes wired, work concluded</span>
+  <span class="line"></span>
+</div>
+
+<section class="testing-section">
+  <h2>Final numbers</h2>
+  <p class="note">The three outstanding fixes were implemented, two defects found during the rerun were corrected, and the benchmark was rerun on the same sheet. This is the closing measurement — the project is being wound down here.</p>
+
+  <div class="mini-stats">
+    <div class="mini-stat">
+      <div class="k">Precision</div>
+      <div class="v">93.9% <span class="delta">from 82.1%</span></div>
+    </div>
+    <div class="mini-stat">
+      <div class="k">Recall</div>
+      <div class="v">86.7% <span class="delta">from 80.0%</span></div>
+    </div>
+    <div class="mini-stat">
+      <div class="k">F1</div>
+      <div class="v">0.902 <span class="delta">from 0.810</span></div>
+    </div>
+    <div class="mini-stat">
+      <div class="k">Boundary edges</div>
+      <div class="v" style="color:var(--pass)">100%</div>
+    </div>
+    <div class="mini-stat">
+      <div class="k">Contract violations</div>
+      <div class="v" style="color:var(--pass)">0</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-title">Accuracy &mdash; PX-2368-0180004-001, Pipeline 3 v2 final</span>
+      <span class="table-sub">42 claims &middot; one sheet &middot; deterministic half only</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead><tr><th>Metric</th><th class="num">2026-07-27</th><th class="num">2026-07-28 final</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">Precision (adjudicated)</td><td class="num dim-cell">82.1%</td><td class="num"><strong>93.9%</strong></td></tr>
+          <tr><td class="row-label">&mdash; boundary edges</td><td class="num dim-cell">100%</td><td class="num" style="color:var(--pass)"><strong>100%</strong></td></tr>
+          <tr><td class="row-label">Recall (independent GT)</td><td class="num dim-cell">80.0%</td><td class="num"><strong>86.7%</strong></td></tr>
+          <tr><td class="row-label">F1</td><td class="num dim-cell">0.810</td><td class="num"><strong>0.902</strong></td></tr>
+          <tr><td class="row-label">Isolated symbols</td><td class="num dim-cell">13 of 38</td><td class="num">9 of 34</td></tr>
+          <tr><td class="row-label">Contract violations</td><td class="num dim-cell">0</td><td class="num">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="verdict" style="border-color:var(--pass);">
+    <strong>6 of the 7 known false positives are gone, with no adjudicated-real edge lost</strong> (31 before and after). The survivor is <code>FSV-0202A&harr;PBA-0201</code> &mdash; pump B's instrument bound to pump A. That is a child-to-equipment edge, outside the child&harr;child rule's scope; the ISA tag-series check already flags it automatically, but as a ranking hint rather than a suppression. Recall gained <code>MBD-0100&harr;PSV-0100B</code>; the two remaining misses are inline valves still isolated in the traced graph.
+  </div>
+
+  <div class="table-card" style="margin-top:18px;">
+    <div class="table-head"><span class="table-title">The five changes in this pass</span></div>
+    <div class="table-scroll">
+      <table class="data audit">
+        <thead><tr><th>Change</th><th>Effect</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">Duplicate-record dedupe (callout vs bubble)</td><td class="dim">symbols 38 &rarr; 34; removed the <code>PSV-0300C&harr;PSV-0300C</code> self-edge</td><td><span class="status-pill pass">PASS</span></td></tr>
+          <tr><td class="row-label">Inline-symbol association, in the tracer</td><td class="dim">populates <code>passes_through_symbols</code>, reviving Pass 0 &mdash; which had genuinely been dead code on the vector path</td><td><span class="status-pill pass">PASS</span></td></tr>
+          <tr><td class="row-label">Inline symbols as routable traversal waypoints</td><td class="dim">the tracer's field alone only chains symbols sharing ONE segment; an inline valve's neighbours are reached via other segments. Isolated symbols 11 &rarr; 9, recall 80.0% &rarr; 86.7%</td><td><span class="status-pill pass">PASS</span></td></tr>
+          <tr><td class="row-label">Child&harr;child suppression &mdash; source-based</td><td class="dim">First attempt keyed on shared host and was <strong>measurably backwards</strong>: two instruments on the same vessel share a host and survived, so it caught only 4 of 7. Rewritten to require Pass 0 (in-series) evidence &mdash; one pipe run physically through both. Preserves inline valve&harr;valve, the strongest PID2Graph stratum</td><td><span class="status-pill pass">PASS after rewrite</span></td></tr>
+          <tr><td class="row-label">Seed/extent tolerance fix</td><td class="dim">the resolver tested containment with a 3px pad while validation required strict containment, so an extent could fail to contain its own seed. Violations 3 &rarr; 0</td><td><span class="status-pill pass">PASS</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4>What to distrust in these numbers</h4>
+    <p><strong>The Phase 0 regression gate no longer holds</strong>, for an understood reason: the tracer now populates <code>passes_through_symbols</code>, so Pass 0 fires on the legacy path for the first time (6,235 of 9,784 segments; 191 of 237 legacy relations). Legacy went 78/52 &rarr; 221/95. That is an expected consequence of the inline fix, not a regression &mdash; but refactor neutrality can no longer be claimed, and any "the v1 baseline was X" statement must be re-derived rather than quoted.</p>
+    <p style="margin-top:8px;"><strong>A retracted claim.</strong> While debugging the above it was asserted that the field "was always populated and the earlier 0-of-8,105 measurement was taken on the wrong graph." That is wrong. The original zero was correct at the time; the field became populated because the fix landed. Pass 0 genuinely was dead code before 2026-07-28.</p>
+    <p style="margin-top:8px;"><strong>6 new claims are unadjudicated</strong>, and 4 fit the sibling pattern the rewritten rule targets. Bounds including everything unresolved: <span class="metric">[73.8%, 95.2%]</span>.</p>
+    <p style="margin-top:8px;"><strong>Two reruns exist and disagree by design.</strong> A parallel session reports 33 relations (symbols=30), having excluded 4 hand-recovered pump instruments whose coordinates were never saved to a file. This run includes them (symbols=34). The 33 figure is the more conservative and more reproducible.</p>
+    <p style="margin-top:8px;"><strong>Still one sheet, still self-adjudicated.</strong> R0's extent resolution drops to 19% and 43% on the other two dev sheets, and port detection fails entirely on the sheet whose CAD export outlines its text. Verdicts came from the same party that wrote the pipeline, and the recall GT is a 15-edge partial reconstruction of a trace that was never persisted.</p>
+  </div>
+
+  <div class="verdict">
+    <strong>Closing summary.</strong> On one real vector sheet with entity extraction corrected by hand, the deterministic half of Pipeline 3 v2 reaches <span class="metric">F1 &asymp; 0.90</span>. Boundary edges went from structurally impossible to 16/16 correct and were the strongest component throughout. One clearly identified defect remains (wrong-host binding, already auto-flagged), and the result has not been shown to generalise beyond this sheet. Against PID2Graph &mdash; the only multi-sheet benchmark with real ground truth &mdash; the pipeline sits at F1 0.225 versus a 0.226 nearest-neighbour floor, but that is the raster path on a corpus with a documented tracing ceiling and is not comparable.
+  </div>
+</section>
+
+<footer class="page">
+  <p>Sources: live read of <code>pnid-extraction-agent</code> (main, current) and <code>pnid-intelligence-agent</code> + PR #711 "Feat/pnid ontology redesign" (branch <code>feat/pnid-ontology-redesign</code>, last commit 2026-06-16) in the <code>rive-ai-platform</code> repo. Numbers quoted are as measured in this session's benchmarks and the PR's own change log, not estimates. 2026-07-24/25 additions: real GPT-5.5-low API calls (`.venv-e2e`, OpenAI Responses API), real PID2Graph corpus reads (762 sheets), real R1+R2a benchmarks, the full relationship pipeline on 3 real sheets with given entities, and an Opus hand-traced recall verification on PX-2368 — nothing in these sections is illustrative. The recall ground truth is an Opus third-signal trace, not certified human annotation.</p>
+</footer>
+
+</div>
